@@ -1,0 +1,11 @@
+## Redirect 404 to own error page
+ErrorDocument 404 /functions/deadlink.php
+## Do not allow browsing this directory
+Options -Indexes
+## Enable manifest files for offline web app
+AddType text/cache-manifest .appcache
+## Disable reading this file
+<Files .htaccess>
+order allow,deny
+deny from all
+</Files>

@@ -1,0 +1,251 @@
+/***
+ * Responsive stylesheet *
+ *
+ *   font-size: 100% 16px 14pt 5mm? 1em
+ *
+ * Using em with 16px base
+ *  320px = 20em
+ *  480px = 30em
+ *  640px = 40em
+ *  720px = 45em
+ *  768px = 48em
+ *  800px = 50em
+ *  960px = 60em
+ * 1024px = 64em
+ * 1120px = 70em
+ * 1280px = 80em
+ * 1440px = 90em
+ *
+ * orientation: portrait/landscape
+ *
+ * min/max: width, device-width
+ *
+ */
+/*** small ***/
+@media only screen and (max-width:64em) {
+
+body {
+	word-wrap: break-word;
+}
+
+img {
+	max-width: 100%;
+}
+
+input, textarea {
+	max-width: 100%;
+}
+
+}
+
+/*** large ***/
+@media only screen and (min-width:64em) {
+
+h1 {
+	padding: 0 0 5mm 0;
+}
+
+div#thebody {
+	/*width: 100%;*/
+	padding-bottom: 1em;
+	padding-left: 3em;
+	padding-right: 3em;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+/*** LANGUAGE ***/
+#language {
+	float: right;
+	z-index: 1;
+}
+
+/*** HOME ***/
+#home {
+	position: absolute;
+	top: 1%;
+	left: 1%;
+	z-index: 1;
+}
+
+/*** COPYRIGHT ***/
+div#cpy {
+	position: fixed;
+	bottom: 60px;
+	left: 10px;
+}
+
+div#cpy img {
+	height: 70px;
+}
+
+#LeftHead {
+	z-index: 9;
+	display: block;
+	position: absolute;
+	top: 10px;
+	left: 10px;
+	text-align: left;
+}
+
+#RightHead {
+	z-index: 9;
+	display: block;
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	text-align: right;
+}
+
+}
+
+
+
+
+
+/*** tables 20,30,48,60,64 ***/
+@media only screen
+and (min-width:20em) {
+
+.csstab20_table {
+	display: table;
+	width: 92%;
+	margin: auto
+}
+
+.csstab20_row {
+	display: table-row;
+	width: 98%;
+}
+
+.csstab20_row_hover:hover {
+	background-color: #bbb;
+}
+
+.csstab20_cell {
+	display: table-cell;
+	margin: 0 auto;
+}
+
+}
+
+
+@media only screen
+and (min-width:30em) {
+
+.csstab30_table {
+	display: table;
+	width: 92%;
+	margin: auto
+}
+
+.csstab30_row {
+	display: table-row;
+	width: 98%;
+}
+
+.csstab30_row_hover:hover {
+	background-color: #bbb;
+}
+
+.csstab30_cell {
+	display: table-cell;
+	margin: 0 auto;
+}
+
+}
+
+
+@media only screen
+and (min-width:48em) {
+
+.csstab48_table {
+	display: table;
+	width: 92%;
+	margin: auto
+}
+
+.csstab48_row {
+	display: table-row;
+	width: 98%;
+}
+
+.csstab48_row_hover:hover {
+	background-color: #bbb;
+}
+
+.csstab48_cell {
+	display: table-cell;
+	margin: 0 auto;
+}
+
+}
+
+
+@media only screen
+and (min-width:60em) {
+
+.csstab60_table {
+	display: table;
+	width: 92%;
+	margin: auto
+}
+
+.csstab60_row {
+	display: table-row;
+	width: 98%;
+}
+
+.csstab60_row_hover:hover {
+	background-color: #bbb;
+}
+
+.csstab60_cell {
+	display: table-cell;
+	margin: 0 auto;
+}
+
+}
+
+
+@media only screen
+and (min-width:64em) {
+
+.csstab64_table {
+	display: table;
+	width: 92%;
+	margin: auto
+}
+
+.csstab64_row {
+	display: table-row;
+	width: 98%;
+}
+
+.csstab64_row_hover:hover {
+	background-color: #bbb;
+}
+
+.csstab64_cell {
+	display: table-cell;
+	margin: 0 auto;
+}
+
+div.lhead {
+	z-index: 5;
+	display: inline-block;
+	width: 13%;
+}
+
+div.rhead {
+	z-index: 5;
+	display: inline-block;
+	width: 13%;
+}
+
+div.chead {
+	width: 72%;
+	display: inline-block;
+}
+
+}

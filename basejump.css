@@ -1,0 +1,336 @@
+/* Put color declaration into media screen block */
+body {
+	/*font-family: "Times New Roman", serif;*/
+	font-family: serif;
+	font-size: 14pt;
+}
+
+h1 {
+	font-family: "Comic sans MS", fantasy;
+	text-align: center;
+}
+
+img {
+	border: 0;
+}
+
+table {
+	border: 0;
+}
+
+/*** links ***/
+a {
+	text-decoration: none;
+}
+
+a:focus {
+	text-decoration: none;
+	color: #0000ff;
+}
+
+a:hover {
+	text-decoration: none;
+	/*text-decoration: underline;*/
+	border-bottom: dotted 1px;
+	color: #0000ff;
+}
+
+a:link {
+	text-decoration: none;
+	color: #0000ff;
+}
+
+a:visited {
+	text-decoration: none;
+	color: #990099;
+}
+
+
+tr:hover {
+	background-color: #bbb;
+}
+
+p {
+	text-align: justify;
+	/*font-family: "Times New Roman", serif;*/
+	font-family: serif;
+	text-indent: 3em;
+}
+
+textarea {
+	font-family: serif, "Times New Roman";
+}
+
+/*** error ***/
+.warning {
+	font-weight: 900;
+	color: #e02060;
+	z-index: 10;
+	padding: 3em 4em;
+}
+
+/*** error ***/
+.error {
+	border: dotted 3px #ff0000;
+	font-weight: 900;
+	color: #e02060;
+	z-index: 10;
+	padding: 3em 4em;
+	background-color: #40d0f0;
+	opacity: 0.8;
+}
+
+div#noscript {
+	text-align: center;
+	padding: 1em;
+	width: 100%;
+	background-color: #777777;
+	color: #ff99ff;
+}
+
+div#IEwarn {
+	text-align: center;
+	padding: 1em;
+	width: 100%;
+	background-color: #555555;
+	color: #ff9911;
+}
+
+#home img {
+	height: 50px;
+	z-index: 1;
+}
+
+div.InB {
+	display: inline-block;
+}
+
+
+/*** VALIDATION ***/
+#LeftFoot {
+	z-index: 5;
+	margin-top: 3mm;
+	margin-bottom: 2mm;
+	margin-left: 3mm;
+}
+
+#LeftFoot img {
+	border: 0;
+	max-width: 20px;
+}
+
+
+
+.code, pre {
+	font-family: Courier, serif;
+	font-size: 9pt;
+	line-height: 80%;
+	text-indent: 0mm;
+	/*background-color: #000000;*/
+	/*color: #00ff00;*/
+}
+
+@media print {
+	div.adm,
+	div#language,
+	div#cpy,
+	div#LeftFoot,
+	div#home
+	{
+		display: none;
+	}
+}
+
+
+/*** marquee design ***/
+.marquee {
+	white-space: nowrap;
+	overflow: hidden;
+	position: relative;
+	float: left;
+	width: 100%;
+}
+
+.marquee span {
+	word-wrap: nowrap;                
+	display: inline-block;
+	position: relative;
+	left: -100%;
+
+	-moz-animation-name  : marquee;
+	-webkit-animation-name: marquee;
+
+	/*** The direction in which the marquee should run ***/
+	/*-webkit-marquee-direction*/
+	/*** The amount per iteration the marquee should move into the set direction ***/
+	/*-webkit-marquee-increment*/
+	/*** The numer of marquee repetitions (remember: infinity is a number too!) ***/
+	/*-webkit-marquee-repetition: infinite;*/
+	/*** The speed of the marquee movement ***/
+	/*-webkit-marquee-speed*/
+	/*** The style of movement ***/
+	/*-webkit-marquee-style*/
+
+	/*** Set the duration, s = seconds ***/
+	-moz-animation-duration  : 20s;
+	-webkit-animation-duration: 20s;
+
+	/*** How many times the animation to repeat ***/
+	-moz-animation-iteration-count  : infinite;
+	-webkit-animation-iteration-count: infinite;
+
+	/*** Several options available, use linear for this example ***/
+	-moz-animation-timing-function  : linear;
+	-webkit-animation-timing-function: linear;
+}
+
+.marquee:hover span {
+	-moz-animation-play-state  : paused;
+	-webkit-animation-play-state: paused;
+}
+
+@-moz-keyframes marquee {
+	0% {
+		left: 100%;
+	}
+	100% {
+		left: -100%;
+	}
+}
+
+@-webkit-keyframes marquee {
+	0% {
+		left: 100%;
+	}
+	100% {
+		left: -100%;
+	}
+}
+/*** marquee ready ***/
+
+
+.it {
+	font-style: italic;
+}
+
+.bo {
+	font-weight: 700;
+}
+
+.center {
+	text-align: center;
+}
+
+.TopBottom {
+	/* Safari */
+	-webkit-transform: rotate(90deg);
+	/* Firefox */
+	-moz-transform: rotate(90deg);
+	/* IE */
+	-ms-transform: rotate(90deg);
+	/* Opera */
+	-o-transform: rotate(90deg);
+}
+
+.BottomTop {
+	/* Safari */
+	-webkit-transform: rotate(-90deg);
+	/* Firefox */
+	-moz-transform: rotate(-90deg);
+	/* IE */
+	-ms-transform: rotate(-90deg);
+	/* Opera */
+	-o-transform: rotate(-90deg);
+}
+
+
+.csstab20_table,
+.csstab30_table,
+.csstab48_table,
+.csstab60_table,
+.csstab64_table {
+	width: 100%;
+}
+
+.csstab20_cell,
+.csstab30_cell,
+.csstab48_cell,
+.csstab60_cell,
+.csstab64_cell {
+	vertical-align: middle;
+}
+
+div.lhead,
+div.rhead {
+	font-size: 0.7em;
+	text-align: center;
+	vertical-align: middle;
+}
+
+
+div#deadhead {
+	text-align: center;
+	margin: auto;
+	width: 100%;
+}
+
+div#deadhead img {
+	max-width: 80%;
+}
+
+div#deadlink {
+	text-align: center;
+	margin: auto;
+	width: 100%;
+}
+
+div#deadlink img {
+	max-width: 90%;
+}
+
+div#deadbody {
+	width: 77%;
+	margin: auto;
+	text-align: center;
+	padding: 1em 0;
+}
+
+div#deadfoot {
+	text-align: center;
+	margin: auto;
+	width: 100%;
+}
+
+div#deadfoot img {
+	max-height: 200px;
+}
+
+div.git {
+	font-size: 0.5em;
+}
+
+span.latex {
+	font-family: Times, "Times New Roman", serif;	
+	letter-spacing: 1px;
+}
+
+span.latex sup {
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-size: 0.85em;
+	vertical-align: 0.15em;
+	margin-left: -0.36em;
+	margin-right: -0.15em;
+}
+
+span.latex sub {
+	text-transform: uppercase;
+	vertical-align: -0.5ex;
+	margin-left: -0.1667em;
+	margin-right: -0.125em;
+	font-size: 1em;
+}
+
+.edit {
+	font-size: 0.7em;
+}
