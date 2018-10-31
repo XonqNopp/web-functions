@@ -54,7 +54,7 @@ p {
 	text-align: justify;
 	/*font-family: "Times New Roman", serif;*/
 	font-family: serif;
-	text-indent: 3em;
+	text-indent: 0.5em;
 }
 
 textarea {
