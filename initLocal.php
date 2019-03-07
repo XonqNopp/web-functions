@@ -1,16 +1,14 @@
-<?php
-/*** Created: Sun 2015-03-15 11:13:58 CET
- * TODO:
- *
- */
+<?php  // FIXME kept only for editor formatting, remove this in production
+// Created: 2019-03-04T16:35:00Z
+
 $initLocal = new stdClass();
 
 
-$ddb = new stdClass();
-$ddb->server   = "";
-$ddb->username = "";
-$ddb->password = "";
-$ddb->DBname   = "";
+$initLocal->ddb = new stdClass();
+$initLocal->ddb->server   = "";
+$initLocal->ddb->username = "";
+$initLocal->ddb->password = "";
+$initLocal->ddb->DBname   = "";
 $initLocal->ddb = $ddb;
 
 
@@ -28,4 +26,7 @@ $initLocal->long->english = "english";
 $initLocal->long->french  = "francais";
 
 $initLocal->AvailLangs = array($initLocal->long->english);//, $initLocal->long->french);
-?>
+
+$initLocal->misc = new stdClass();
+?>  // FIXME kept only for editor formatting, remove this in production
+
