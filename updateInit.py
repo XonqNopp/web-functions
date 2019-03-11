@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import shutil
 import subprocess
 import base64
 import hashlib
@@ -8,12 +9,28 @@ import getpass
 
 
 class Encrypter:
-    DEBUG = False
+    """
+    Encrypter helper to run same processes as PHP encrypt process.
+    """
     KEY_FILE = 'yptok'
+    KEY_MAXLENGTH = 32
+
     ENCRYPTED_FILE = 'functions_local/initLocal.aes'
+
     IV_LENGTH = 16
     SHA_LENGTH = hashlib.sha256().digest_size
+
     TMP_FILE = '/tmp/il.php'
+    TEMPLATE_FILE = 'functions/initLocal.php'
+
+    def __init__(self, debug=False):
+        self.DEBUG = debug
+
+        if self.DEBUG > 0:
+            print('Running with debug mode: {}'.format(self.DEBUG))
+
+            if self.DEBUG > 4:
+                print('WARNING: no file writing')
 
     def str2hex(self, string):
         """
@@ -42,8 +59,14 @@ class Encrypter:
         with open(self.KEY_FILE, 'r') as keyFile:
             key = keyFile.read().strip()
 
-        if self.DEBUG > 2:
+        if self.DEBUG > 4:
             print('key={}'.format(key))
+
+        if self.DEBUG > 0:
+            print('len(key)={}'.format(len(key)))
+
+        if len(key) > self.KEY_MAXLENGTH:
+            raise ValueError('Key too long {}, max allowed by openssl is {}'.format(len(key), self.KEY_MAXLENGTH))
 
         return key
 
@@ -65,14 +88,14 @@ class Encrypter:
         dataHmac = hmac.new(key, msg=data, digestmod=hashlib.sha256).digest()
         return dataHmac
 
-    def _openssl(self, key, iv, data, encrypt=True):
+    def _openssl(self, key, iv, data, encrypt):
         """
         Execute openssl command.
 
         Args:
             * *key* (str)
             * *iv* (str)
-            * *data* (str)
+            * *data* (bytes)
             * *encrypt* (bool): True to encrypt, False to decrypt
 
         Returns:
@@ -80,20 +103,25 @@ class Encrypter:
         """
         if isinstance(key, bytes):
             key = key.decode()
+
         key = self.str2hex(key)
 
         if isinstance(iv, bytes):
             iv = iv.decode()
+
         iv = self.str2hex(iv)
 
         command = ['openssl', 'enc', '-aes-256-cbc']
+
         if encrypt:
             command.append('-e')
+
         else:
             command.append('-d')
+
         command.extend(['-iv', iv])
 
-        if self.DEBUG:
+        if self.DEBUG > 1:
             print(' '.join(command))
 
         command.extend(['-K', key])
@@ -109,14 +137,16 @@ class Encrypter:
         Args:
             * *key* (str)
             * *iv* (str)
-            * *data* (str)
+            * *data* (bytes)
 
         Returns:
             decrypted data (str)
         """
         plainData = self._openssl(key, iv, data, encrypt=False)
-        if self.DEBUG > 2:
+
+        if self.DEBUG > 4:
             print('decrypt={}'.format(plainData))
+
         return plainData
 
     def encrypt(self, key, iv, data):
@@ -126,14 +156,16 @@ class Encrypter:
         Args:
             * *key* (str)
             * *iv* (str)
-            * *data* (str)
+            * *data* (bytes)
 
         Returns:
             encrypted data (str)
         """
         encryptedData = self._openssl(key, iv, data, encrypt=True)
+
         if self.DEBUG > 1:
             print('encrypt={}'.format(encryptedData))
+
         return encryptedData
 
     def read(self):
@@ -163,9 +195,13 @@ class Encrypter:
         if isinstance(iv, str):
             iv = iv.encode()
 
-        if self.DEBUG:
+        if self.DEBUG > 0:
             print('iv={}'.format(iv))
             print('hmac={}'.format(hmac))
+
+        if self.DEBUG > 4:
+            print('Skipping write file')
+            return
 
         with open(self.ENCRYPTED_FILE, 'w') as f:
             f.write(base64.encodebytes(iv + hmac + data).decode())
@@ -176,10 +212,14 @@ class Encrypter:
 
         Args:
             * *plainData* (str or bytes)
+            * *recover* (bool): do not use plain data, only tmp file
 
         Returns:
             plain data edited (bytes)
         """
+        if self.DEBUG > 1:
+            print('edit(recover={})'.format(recover))
+
         if not recover:
             if isinstance(plainData, str):
                 plainData = plainData.encode()
@@ -191,12 +231,19 @@ class Encrypter:
         # edit
         subprocess.run(['vim', '-n', '-u', 'NONE', self.TMP_FILE])
 
-        # read back from tmp file
+        # read back from tmp file and encode to bytes
         with open(self.TMP_FILE, 'r') as tmp:
-            newPlainData = tmp.read().strip().encode()
+            newPlainData = tmp.read().strip()
 
         # delete tmp file
         os.remove(self.TMP_FILE)
+
+        # Check if PHP tags present
+        if newPlainData.startswith('<?php'):
+            raise ValueError('You forgot to remove the PHP tags kept for editor formatting, abort')
+
+        # Convert to bytes
+        newPlainData = newPlainData.encode()
 
         # check if modifications
         if newPlainData == plainData:
@@ -217,6 +264,10 @@ class Encrypter:
         p2 = getpass.getpass('Confirm the new password: ')
         if p1 != p2:
             return None
+
+        if self.DEBUG > 4:
+            print('Skipping writing new password: {}'.format(p1))
+            return p1
 
         # Write new password to file
         with open(self.KEY_FILE, 'w') as keyFile:
@@ -254,13 +305,22 @@ class Encrypter:
         return iv
 
     def run(self, recover=False):
+        """
+        Run the encrypter.
+
+        Args:
+            * *recover* (bool): True to use default template file as input
+        """
+        # init required vars
+        iv = None
+        plainData = None
+
         # Read key
         key = self.readKey()
 
         if recover:
-            # init required vars
-            iv = None
-            plainData = None
+            shutil.copy(self.TEMPLATE_FILE, self.TMP_FILE)
+
         else:
             # read encrypted file
             data = self.read()
@@ -294,7 +354,9 @@ class Encrypter:
         # Write procedure
         if writeFile:
             # ask if want to change password
-            changeKey = input('Do you want to change password? [y/N]  ')
+            #changeKey = input('Do you want to change password? [y/N]  ')
+
+            changeKey = ''  # Too dangerous to change this way
             if changeKey != '' and changeKey.lower()[0] == 'y':
                 newKey = self.changePassword()
                 if newKey is None:
@@ -315,14 +377,20 @@ if __name__ == '__main__':
     from argparse import ArgumentParser
     parser = ArgumentParser()
     parser.add_argument(
+        '-d',
+        '--debug',
+        action='count',
+        default=0,
+        help='debug mode, from level 5 file writing is disabled'
+    )
+    parser.add_argument(
         '--recover',
         action='store_true',
         default=False,
-        help=('use this flag if you want to use an unencrypted file as start.' +
-              'To be placed in {}'.format(Encrypter.TMP_FILE))
+        help='to use the default unencrypted file as start'
     )
     args = parser.parse_args()
 
-    tool = Encrypter()
+    tool = Encrypter(args.debug)
     tool.run(args.recover)
 
