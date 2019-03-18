@@ -6,6 +6,7 @@ import base64
 import hashlib
 import hmac
 import getpass
+from datetime import datetime
 
 
 class Encrypter:
@@ -20,7 +21,7 @@ class Encrypter:
     IV_LENGTH = 16
     SHA_LENGTH = hashlib.sha256().digest_size
 
-    TMP_FILE = '/tmp/il.php'
+    TMP_FILE = '/tmp/il'
     TEMPLATE_FILE = 'functions/initLocal.php'
 
     def __init__(self, debug=False):
@@ -31,6 +32,10 @@ class Encrypter:
 
             if self.DEBUG > 4:
                 print('WARNING: no file writing')
+
+        self._tmpFilename = self.TMP_FILE + datetime.strftime(datetime.utcnow(), '%Y%m%d%H%M%S%f') + '.php'
+        if self.DEBUG:
+            print('TMP: {}'.format(self._tmpFilename))
 
     def str2hex(self, string):
         """
@@ -225,18 +230,18 @@ class Encrypter:
                 plainData = plainData.encode()
 
             # write to tmp file
-            with open(self.TMP_FILE, 'wb') as tmp:
+            with open(self._tmpFilename, 'wb') as tmp:
                 tmp.write(plainData)
 
         # edit
-        subprocess.run(['vim', '-n', '-u', 'NONE', self.TMP_FILE])
+        subprocess.run(['vim', '-n', '-u', 'NONE', self._tmpFilename])
 
         # read back from tmp file and encode to bytes
-        with open(self.TMP_FILE, 'r') as tmp:
+        with open(self._tmpFilename, 'r') as tmp:
             newPlainData = tmp.read().strip()
 
         # delete tmp file
-        os.remove(self.TMP_FILE)
+        os.remove(self._tmpFilename)
 
         # Check if PHP tags present
         if newPlainData.startswith('<?php'):
@@ -319,7 +324,7 @@ class Encrypter:
         key = self.readKey()
 
         if recover:
-            shutil.copy(self.TEMPLATE_FILE, self.TMP_FILE)
+            shutil.copy(self.TEMPLATE_FILE, self._tmpFilename)
 
         else:
             # read encrypted file
