@@ -1446,7 +1446,7 @@ class PhPage {
 								$back .= $moreargs;
 								$back .= " />";
 								$back .= "<label";
-								$back .= " for=\"${name}_$key\">";
+								$back .= " for=\"{$name}_$key\">";
 								$back .= "&nbsp;$val";
 								$back .= "</label>\n";
 							}
@@ -1503,7 +1503,7 @@ class PhPage {
 								$args = new stdClass();
 								$args->type = "select";
 								$args->title = "";
-								$args->name = "${name}_day";
+								$args->name = "{$name}_day";
 								$args->value = $banana->day;
 								$args->list = $days;
 								$args->autofocus = $autofocus;
@@ -1518,7 +1518,7 @@ class PhPage {
 								for($i = 1; $i < 13; $i++) {
 									$months["$i"] = $this->Months($i);
 								}
-								$args->name = "${name}_month";
+								$args->name = "{$name}_month";
 								$args->value = $banana->month;
 								$args->list = $months;
 								$back .= $this->FormField($args);
@@ -1545,7 +1545,7 @@ class PhPage {
 								if($years[count($years)-1] == $now->year) {
 									$years = array_reverse($years);
 								}
-								$args->name = "${name}_year";
+								$args->name = "{$name}_year";
 								$args->value = $banana->year;
 								$args->list = $years;
 								$back .= $this->FormField($args);
@@ -1566,7 +1566,7 @@ class PhPage {
 								$args = new stdClass();
 								$args->type = "select";
 								$args->title = $title;
-								$args->name = "${name}_hour";
+								$args->name = "{$name}_hour";
 								$args->value = $banana->hour;
 								$args->list = $hours;
 								$args->autofocus = $autofocus;
@@ -1583,7 +1583,7 @@ class PhPage {
 								for($i = 0; $i < 60; $i++) {
 									$minutes[] = sprintf("%02d", $i);
 								}
-								$args->name = "${name}_minute";
+								$args->name = "{$name}_minute";
 								$args->value = $banana->minute;
 								$args->list = $minutes;
 								$back .= $this->FormField($args);
@@ -1596,7 +1596,7 @@ class PhPage {
 									for($i = 0; $i < 60; $i++) {
 										$seconds[] = sprintf("%02d", $i);
 									}
-									$args->name = "${name}_second";
+									$args->name = "{$name}_second";
 									$args->value = $banana->second;
 									$args->list = $seconds;
 									$back .= $this->FormField($args);
@@ -1760,7 +1760,7 @@ class PhPage {
 							}
 							$this->ln_3(5, "setAvailLangs: $newStr");
 							$_SESSION["AvailLangs"] = $new;
-							if(!in_array($_SESSION["language"], $new)) {
+							if(!isset($_SESSION["language"]) || !in_array($_SESSION["language"], $new)) {
 								$this->ChangeSessionLang($new[0]);
 							}
 						}
@@ -2114,15 +2114,17 @@ class PhPage {
 					$server = "";
 					$us = "";
 					$pd = "";
+					/*
 					if($this->LocalHost()) {
 						$server = "localhost";
 						$us = "phpmyadmin";
 						$pd = "root";
 					} else {
+					 */
 						$server = $this->ddb->server;
 						$us = $this->ddb->username;
 						$pd = $this->ddb->password;
-					}
+					//}
 					$this->ln_3(6, "DB_Connection($which)");
 					$mysqli = new mysqli($server, $us, $pd, $this->ddb->DBname);
 					if($error_num = mysqli_connect_errno()) {
@@ -2466,7 +2468,7 @@ class PhPage {
 				/*** SQL sort alpha ***/
 				public function DB_SortAlpha($field, $language = "") {
 					$this->ln_3(6, "DB_SortAlpha($field)");
-					$nodetfield = "${field}_nodet";
+					$nodetfield = "{$field}_nodet";
 					$back = "";
 					//// 3-letter words
 					$back .= "IF(";
@@ -2532,7 +2534,7 @@ class PhPage {
 				/*** SQL sort num ***/
 				public function DB_OrderAlpha($field, $way = "ASC") {
 					$this->ln_3(6, "DB_OrderAlpha($field, $way)");
-					$field = "${field}_nodet";
+					$field = "{$field}_nodet";
 					if($way == "ASC") {
 						$noway = "DESC";
 					} else {
@@ -3514,6 +3516,7 @@ class PhPage {
 			//
 				//// get git versions
 				public function git_st() {
+					return "";
 					$lastdate = "log -1 --pretty=format:\"%cd\" --date=short";
 					$lasthash = "log -1 --pretty=format:\"%h\"";
 					$wdate = exec("git $lastdate");
@@ -3640,7 +3643,7 @@ class PhPage {
 								if(preg_match("/\.\.$/", $rooturl)) {
 									$rooturl = "$rooturl/index.php";
 								} elseif(preg_match("/\.\.\/$/", $rooturl)) {
-									$rooturl = "${rooturl}index.php";
+									$rooturl = "{$rooturl}index.php";
 								}
 							} else {
 								$rooturl = "$rootpage.php";
