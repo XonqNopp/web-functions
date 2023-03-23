@@ -6,7 +6,7 @@ body {
 }
 
 h1 {
-	font-family: "Comic sans MS", fantasy;
+	font-family: sans-serif;
 	text-align: center;
 }
 
@@ -46,9 +46,27 @@ a:visited {
 }
 
 
+a.titleAnchor {
+	visibility: hidden;
+	color: #888;
+}
+
+h1:hover > a.titleAnchor,
+h2:hover > a.titleAnchor,
+h3:hover > a.titleAnchor,
+h4:hover > a.titleAnchor,
+h5:hover > a.titleAnchor,
+h6:hover > a.titleAnchor,
+a.titleAnchor:hover {
+	visibility: visible;
+}
+
+
+
 tr:hover {
 	background-color: #bbb;
 }
+
 
 p {
 	text-align: justify;
@@ -56,6 +74,7 @@ p {
 	font-family: serif;
 	text-indent: 0.5em;
 }
+
 
 textarea {
 	font-family: serif, "Times New Roman";

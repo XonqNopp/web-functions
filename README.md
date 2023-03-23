@@ -3,15 +3,6 @@
 This repo contains all the common stuff I use for the websites I develop.
 
 
-# TODO
-
-* see list in classPage.php
-* remove CSS px and pt sizes
-* Check all js and work them out
-* remove jsforms forbiddenkeys and all deprecated
-
-# Docs
-
 ## HTML5
 
 * minimum working example:
@@ -44,13 +35,6 @@ This repo contains all the common stuff I use for the websites I develop.
   ```
 
   One must keep in mind that the apple touch icon should not have an alpha channel (transparency) or it will be displayed black.
-
-* meta: In the head, you can place keywords and a description for search engines:
-
-  ```html
-  <meta name="keywords" content="your, key, words" />
-  <meta name="description" content="description of your website" />
-  ```
 
 * form upload: If you want to upload a file in a form, you need to specify:
 
@@ -174,11 +158,11 @@ Useful link: http://php.net/
     }
     ```
 
-  * null:
+  * NULL:
     If there are no mandatory arguemnts at all, you can write so:
 
     ```php
-    function myfunction(stdClass args = NULL) {
+    function myfunction(stdClass args=NULL) {
       //...
       if($args !== NULL) {
         foreach($args as $k => $v) {$$k = $v;}
@@ -345,5 +329,3 @@ Useful link: http://php.net/
   It is easier to maintain when built another way:
   Set up another table with the names you want in the set which are associated to an ID and use this ID in the other table.
   This way changing the set is really easy and does not require sophisticated MySQL skills.
-
-

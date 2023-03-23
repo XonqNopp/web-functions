@@ -28,7 +28,7 @@ function disablesubmit(fieldname)
 	eval("document.forms[0]." + fieldname + ".disabled = true;");
 }
 
-function doEnableSubmit(fieldname, fields_onchange = [], fields_onkeyup = [], fields_onclick = [])
+function doEnableSubmit(fieldname, fields_onchange=[], fields_onkeyup=[], fields_onclick=[])
 {
 	if(fields_onchange.length > 0) {
 		for(var x in fields_onchange) {

@@ -1,5 +1,4 @@
 <?php  // FIXME kept only for editor formatting, remove this in production
-// Created: 2019-03-04T16:35:00Z
 
 $initLocal = new stdClass();
 
@@ -29,4 +28,3 @@ $initLocal->AvailLangs = array($initLocal->long->english);//, $initLocal->long->
 
 $initLocal->misc = new stdClass();
 ?>  // FIXME kept only for editor formatting, remove this in production
-

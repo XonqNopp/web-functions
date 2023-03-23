@@ -12,7 +12,7 @@ function ConfirmCancel() {
 	if(bu) {
 		return "Are you sure you want to leave this page?";
 	}
-	return null;
+	return NULL;
 }
 
 // FieldAction
@@ -43,9 +43,9 @@ function SubmitForm() {
 
 // ConfirmErase
 // use: <input type="submit" value="erase" onclick="return ConfirmErase(...)" />
-function ConfirmErase(content, english=true) {
+function ConfirmErase(content, bEnglish=true) {
 	var q = "Are you sure you want to delete ";
-	if(!english) {
+	if(!bEnglish) {
 		q = "Es-tu sur de vouloir effacer ";
 	}
 	q += content;

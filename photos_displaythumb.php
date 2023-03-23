@@ -12,15 +12,16 @@ function GetThumb($picpath, $max) {
 	$newwidth  = $width;
 	$newheight = $height;
 
+	$ratio = $max / $height;
 	if($width >= $height) {
 		$ratio = $max / $width;
-	} else {
-		$ratio = $max / $height;
 	}
+
 	if($ratio < 1) {
 		$newwidth  = $ratio * $width;
 		$newheight = $ratio * $height;
 	}
+
 	$thumb = imagecreatetruecolor($newwidth, $newheight);
 	$background = imagecolorallocate($thumb, 0, 0, 0);
 	ImageColorTransparent($thumb, $background); // make the new temp image all transparent
@@ -39,21 +40,20 @@ function GetThumb($picpath, $max) {
 		case "jpg" :
 		case "jpeg":
 			$img = imagecreatefromjpeg($picpath);
-			$t1 = imagecopyresized($thumb, $img, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
-			$t2 = imagejpeg($thumb);
+			imagecopyresized($thumb, $img, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
+			imagejpeg($thumb);
 			break;
 		case "png":
 			$img = imagecreatefrompng($picpath);
-			$t1 = imagecopyresized($thumb, $img, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
-			$t2 = imagepng($thumb);
+			imagecopyresized($thumb, $img, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
+			imagepng($thumb);
 			break;
 		case "gif" :
 			$img = imagecreatefromgif($picpath);
-			$t1 = imagecopyresized($thumb, $img, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
-			$t2 = imagegif($thumb);
+			imagecopyresized($thumb, $img, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
+			imagegif($thumb);
 			break;
 		default :
-			$t1 = false;
 			break;
 	}
 	imagedestroy($img);

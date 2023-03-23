@@ -16,13 +16,13 @@ class Encrypter:
     KEY_FILE = 'yptok'
     KEY_MAXLENGTH = 32
 
-    ENCRYPTED_FILE = 'functions_local/initLocal.aes'
+    ENCRYPTED_FILE = 'functions_local/init_local.aes'
 
     IV_LENGTH = 16
     SHA_LENGTH = hashlib.sha256().digest_size
 
     TMP_FILE = '/tmp/il'
-    TEMPLATE_FILE = 'functions/initLocal.php'
+    TEMPLATE_FILE = 'functions/templates/init_local.php'
 
     def __init__(self, debug=False):
         self.DEBUG = debug
