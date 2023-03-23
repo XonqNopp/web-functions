@@ -1,0 +1,19 @@
+[flake8]
+max-line-length = 119
+extend-ignore = E402, E722, E731, W503, D200, D203, D204, D205, D212, D400, D401, D406, D407, D413, D415, DCO010
+# E402: module level import not at top of file
+# E722: do not use bare except, specify exception instead
+# E731: do not assign a lambda expression, use a def
+# W503: line break before binary operator
+# D200: One-line docstring should fit on one line with quotes
+# D203: 1 blank line required before class docstring
+# D204: 1 blank line required after class docstring
+# D205: 1 blank line required between summary line and description
+# D212: Multi-line docstring summary should start at the first line
+# D400: First line should end with a period
+# D401: First line should be in imperative mood
+# D406: Section name should end with a newline (we end with +newline)
+# D407: Missing dashed underline after section
+# D413: Missing blank line after last section
+# D415: First line should end with a period, question mark, or exclamation point
+# DCO010: docstring missing on a function/ method/ class

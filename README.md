@@ -2,15 +2,15 @@
 
 This repo contains all the common stuff I use for the websites I develop.
 
+To simplify the require statements, all sub-helper files are suffixed with `_helper`.
 
-# TODO
 
-* see list in classPage.php
-* remove CSS px and pt sizes
-* Check all js and work them out
-* remove jsforms forbiddenkeys and all deprecated
+## TODO
 
-# Docs
+* `database.php` DB dump/backup
+* `form_fields.php` time+datetime with seconds? Not sure I need...
+* `html.php` lang attribute should use session language
+
 
 ## HTML5
 
@@ -18,7 +18,7 @@ This repo contains all the common stuff I use for the websites I develop.
 
   ```html
   <!doctype html>
-  <html>
+  <html lang="en">
   <head>
   <meta charset="utf-8" />
   <title>Page title</title>
@@ -44,13 +44,6 @@ This repo contains all the common stuff I use for the websites I develop.
   ```
 
   One must keep in mind that the apple touch icon should not have an alpha channel (transparency) or it will be displayed black.
-
-* meta: In the head, you can place keywords and a description for search engines:
-
-  ```html
-  <meta name="keywords" content="your, key, words" />
-  <meta name="description" content="description of your website" />
-  ```
 
 * form upload: If you want to upload a file in a form, you need to specify:
 
@@ -114,11 +107,13 @@ This repo contains all the common stuff I use for the websites I develop.
 
 
 ## javascript
+
 javascript is used to change the page after it is loaded, mainly upon user interactions.
 But it can be heavy for some computers and be used by hackers, so it is better to avoid it when possible...
 
 
 ## PHP
+
 Useful link: http://php.net/
 
 * session start+regenerate id: If you want to store session variables (variables that stays the same
@@ -174,11 +169,11 @@ Useful link: http://php.net/
     }
     ```
 
-  * null:
+  * NULL:
     If there are no mandatory arguemnts at all, you can write so:
 
     ```php
-    function myfunction(stdClass args = NULL) {
+    function myfunction(stdClass args=NULL) {
       //...
       if($args !== NULL) {
         foreach($args as $k => $v) {$$k = $v;}
@@ -203,6 +198,13 @@ Useful link: http://php.net/
 
   ```php
   hash("sha512", $var);
+  hash_hmac("sha512", $var, $secret);
+  ```
+
+  and compare the hash with `hash_equals` (user input is 2nd arg):
+
+  ```php
+  hash_equals(hash("sha512", $value), $hashFromUser);
   ```
 
 * header location: To redirect the user on another page when loading, use
@@ -345,5 +347,3 @@ Useful link: http://php.net/
   It is easier to maintain when built another way:
   Set up another table with the names you want in the set which are associated to an ID and use this ID in the other table.
   This way changing the set is really easy and does not require sophisticated MySQL skills.
-
-

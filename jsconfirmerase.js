@@ -1,4 +1,4 @@
-function ConfirmErase(language, type, id = "") {
+function ConfirmErase(language, type, id="") {
 	//console.log("confirmerase in da place");
 	var question = "";
 	if(type != "" && id != "") {
