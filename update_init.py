@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""
+Script used to write and update the encrypted init file used in PHP.
+"""
 import os
 import shutil
 import subprocess
@@ -25,17 +28,17 @@ class Encrypter:
     TEMPLATE_FILE = 'functions/templates/init_local.php'
 
     def __init__(self, debug=False):
-        self.DEBUG = debug
+        self._debug = debug
 
-        if self.DEBUG > 0:
-            print('Running with debug mode: {}'.format(self.DEBUG))
+        if self._debug > 0:
+            print(f'Running with debug mode: {self._debug}')
 
-            if self.DEBUG > 4:
+            if self._debug > 4:
                 print('WARNING: no file writing')
 
         self._tmpFilename = self.TMP_FILE + datetime.strftime(datetime.utcnow(), '%Y%m%d%H%M%S%f') + '.php'
-        if self.DEBUG:
-            print('TMP: {}'.format(self._tmpFilename))
+        if self._debug:
+            print(f'TMP: {self._tmpFilename}')
 
     def str2hex(self, string):
         """
@@ -49,7 +52,7 @@ class Encrypter:
         """
         result = ''
         for char in string:
-            result += '{:02x}'.format(ord(char))
+            result += f'{ord(char):02x}'
 
         return result
 
@@ -64,14 +67,14 @@ class Encrypter:
         with open(self.KEY_FILE, 'r') as keyFile:
             key = keyFile.read().strip()
 
-        if self.DEBUG > 4:
-            print('key={}'.format(key))
+        if self._debug > 4:
+            print(f'{key=}')
 
-        if self.DEBUG > 0:
-            print('len(key)={}'.format(len(key)))
+        if self._debug > 0:
+            print(f'{len(key)=}')
 
         if len(key) > self.KEY_MAXLENGTH:
-            raise ValueError('Key too long {}, max allowed by openssl is {}'.format(len(key), self.KEY_MAXLENGTH))
+            raise ValueError(f'Key too long {len(key)}, max allowed by openssl is {self.KEY_MAXLENGTH}')
 
         return key
 
@@ -126,7 +129,7 @@ class Encrypter:
 
         command.extend(['-iv', iv])
 
-        if self.DEBUG > 1:
+        if self._debug > 1:
             print(' '.join(command))
 
         command.extend(['-K', key])
@@ -149,8 +152,8 @@ class Encrypter:
         """
         plainData = self._openssl(key, iv, data, encrypt=False)
 
-        if self.DEBUG > 4:
-            print('decrypt={}'.format(plainData))
+        if self._debug > 4:
+            print(f'decrypt={plainData}')
 
         return plainData
 
@@ -168,8 +171,8 @@ class Encrypter:
         """
         encryptedData = self._openssl(key, iv, data, encrypt=True)
 
-        if self.DEBUG > 1:
-            print('encrypt={}'.format(encryptedData))
+        if self._debug > 1:
+            print(f'encrypt={encryptedData}')
 
         return encryptedData
 
@@ -200,11 +203,10 @@ class Encrypter:
         if isinstance(iv, str):
             iv = iv.encode()
 
-        if self.DEBUG > 0:
-            print('iv={}'.format(iv))
-            print('hmac={}'.format(hmac))
+        if self._debug > 0:
+            print(f'{iv=}\n{hmac=}')
 
-        if self.DEBUG > 4:
+        if self._debug > 4:
             print('Skipping write file')
             return
 
@@ -222,8 +224,8 @@ class Encrypter:
         Returns:
             plain data edited (bytes)
         """
-        if self.DEBUG > 1:
-            print('edit(recover={})'.format(recover))
+        if self._debug > 1:
+            print(f'edit({recover=})')
 
         if not recover:
             if isinstance(plainData, str):
@@ -270,8 +272,8 @@ class Encrypter:
         if p1 != p2:
             return None
 
-        if self.DEBUG > 4:
-            print('Skipping writing new password: {}'.format(p1))
+        if self._debug > 4:
+            print(f'Skipping writing new password: {p1}')
             return p1
 
         # Write new password to file
@@ -294,7 +296,7 @@ class Encrypter:
         valid = False
         while not valid:
             while len(iv) < self.IV_LENGTH:
-                iv += input('Provide data to be used as initialization vector (min size={}): '.format(self.IV_LENGTH))
+                iv += input(f'Provide data to be used as initialization vector (min size={self.IV_LENGTH}): ')
 
             # Get only required size
             iv = iv[:self.IV_LENGTH]
@@ -398,4 +400,3 @@ if __name__ == '__main__':
 
     tool = Encrypter(args.debug)
     tool.run(args.recover)
-
