@@ -2,6 +2,10 @@
 """
 Script used to write and update the encrypted init file used in PHP.
 """
+# TODO docstrings
+# TODO codestyle
+# TODO logging
+# TODO pathlib
 import os
 import shutil
 import subprocess
@@ -36,9 +40,11 @@ class Encrypter:
             if self._debug > 4:
                 print('WARNING: no file writing')
 
-        self._tmpFilename = self.TMP_FILE + datetime.strftime(datetime.utcnow(), '%Y%m%d%H%M%S%f') + '.php'
+        self._tmp_filename = self.TMP_FILE + datetime.strftime(datetime.utcnow(), '%Y%m%d%H%M%S%f')
+        self._tmp_filename += '.php'
+
         if self._debug:
-            print(f'TMP: {self._tmpFilename}')
+            print(f'TMP: {self._tmp_filename}')
 
     def str2hex(self, string):
         """
@@ -56,7 +62,7 @@ class Encrypter:
 
         return result
 
-    def readKey(self):
+    def read_key(self):
         """
         Read key from secret file.
 
@@ -64,8 +70,8 @@ class Encrypter:
             key (str) as plain text
         """
         key = None
-        with open(self.KEY_FILE, 'r') as keyFile:
-            key = keyFile.read().strip()
+        with open(self.KEY_FILE, 'r') as key_file:
+            key = key_file.read().strip()
 
         if self._debug > 4:
             print(f'{key=}')
@@ -78,7 +84,7 @@ class Encrypter:
 
         return key
 
-    def computeHmac(self, data, key):
+    def compute_hmac(self, data, key):
         """
         Compute HMAC-SHA256 of data.
 
@@ -93,16 +99,15 @@ class Encrypter:
         if isinstance(key, str):
             key = key.encode()
 
-        dataHmac = hmac.new(key, msg=data, digestmod=hashlib.sha256).digest()
-        return dataHmac
+        return hmac.new(key, msg=data, digestmod=hashlib.sha256).digest()
 
-    def _openssl(self, key, iv, data, encrypt):
+    def _openssl(self, key, init_vec, data, encrypt):
         """
         Execute openssl command.
 
         Args:
             * *key* (str)
-            * *iv* (str)
+            * *init_vec* (str)
             * *data* (bytes)
             * *encrypt* (bool): True to encrypt, False to decrypt
 
@@ -114,10 +119,10 @@ class Encrypter:
 
         key = self.str2hex(key)
 
-        if isinstance(iv, bytes):
-            iv = iv.decode()
+        if isinstance(init_vec, bytes):
+            init_vec = init_vec.decode()
 
-        iv = self.str2hex(iv)
+        init_vec = self.str2hex(init_vec)
 
         command = ['openssl', 'enc', '-aes-256-cbc']
 
@@ -127,7 +132,7 @@ class Encrypter:
         else:
             command.append('-d')
 
-        command.extend(['-iv', iv])
+        command.extend(['-iv', init_vec])
 
         if self._debug > 1:
             print(' '.join(command))
@@ -138,38 +143,38 @@ class Encrypter:
 
         return cmd.stdout
 
-    def decrypt(self, key, iv, data):
+    def decrypt(self, key, init_vec, data):
         """
         Decrypt data provided key and IV.
 
         Args:
             * *key* (str)
-            * *iv* (str)
+            * *init_vec* (str)
             * *data* (bytes)
 
         Returns:
             decrypted data (str)
         """
-        plainData = self._openssl(key, iv, data, encrypt=False)
+        plainData = self._openssl(key, init_vec, data, encrypt=False)
 
         if self._debug > 4:
             print(f'decrypt={plainData}')
 
         return plainData
 
-    def encrypt(self, key, iv, data):
+    def encrypt(self, key, init_vec, data):
         """
         Encrypt data provided key and IV.
 
         Args:
             * *key* (str)
-            * *iv* (str)
+            * *init_vec* (str)
             * *data* (bytes)
 
         Returns:
             encrypted data (str)
         """
-        encryptedData = self._openssl(key, iv, data, encrypt=True)
+        encryptedData = self._openssl(key, init_vec, data, encrypt=True)
 
         if self._debug > 1:
             print(f'encrypt={encryptedData}')
@@ -186,32 +191,32 @@ class Encrypter:
         with open(self.ENCRYPTED_FILE, 'r') as f:
             data = base64.decodebytes(f.read().strip().encode())
 
-        iv = data[:self.IV_LENGTH]
+        init_vec = data[:self.IV_LENGTH]
         hmac = data[self.IV_LENGTH:self.IV_LENGTH + self.SHA_LENGTH]
         realData = data[self.IV_LENGTH + self.SHA_LENGTH:]
-        return {'hmac': hmac, 'iv': iv, 'encryptedData': realData}
+        return {'hmac': hmac, 'iv': init_vec, 'encryptedData': realData}
 
-    def write(self, iv, hmac, data):
+    def write(self, init_vec, hmac, data):
         """
         Compose data and write to encrypted file.
 
         Args:
-            * *iv* (str)
+            * *init_vec* (str)
             * *hmac* (str)
             * *data* (str)
         """
-        if isinstance(iv, str):
-            iv = iv.encode()
+        if isinstance(init_vec, str):
+            init_vec = init_vec.encode()
 
         if self._debug > 0:
-            print(f'{iv=}\n{hmac=}')
+            print(f'{init_vec=}\n{hmac=}')
 
         if self._debug > 4:
             print('Skipping write file')
             return
 
         with open(self.ENCRYPTED_FILE, 'w') as f:
-            f.write(base64.encodebytes(iv + hmac + data).decode())
+            f.write(base64.encodebytes(init_vec + hmac + data).decode())
 
     def edit(self, plainData, recover=False):
         """
@@ -232,18 +237,18 @@ class Encrypter:
                 plainData = plainData.encode()
 
             # write to tmp file
-            with open(self._tmpFilename, 'wb') as tmp:
+            with open(self._tmp_filename, 'wb') as tmp:
                 tmp.write(plainData)
 
         # edit
-        subprocess.run(['vim', '-n', '-u', 'NONE', self._tmpFilename])
+        subprocess.run(['vim', '-n', '-u', 'NONE', self._tmp_filename])
 
         # read back from tmp file and encode to bytes
-        with open(self._tmpFilename, 'r') as tmp:
+        with open(self._tmp_filename, 'r') as tmp:
             newPlainData = tmp.read().strip()
 
         # delete tmp file
-        os.remove(self._tmpFilename)
+        os.remove(self._tmp_filename)
 
         # Check if PHP tags present
         if newPlainData.startswith('<?php'):
@@ -277,8 +282,8 @@ class Encrypter:
             return p1
 
         # Write new password to file
-        with open(self.KEY_FILE, 'w') as keyFile:
-            keyFile.write(p1)
+        with open(self.KEY_FILE, 'w') as key_file:
+            key_file.write(p1)
 
         return p1
 
@@ -292,24 +297,24 @@ class Encrypter:
         Returns:
             IV (str)
         """
-        iv = ''
+        init_vec = ''
         valid = False
         while not valid:
-            while len(iv) < self.IV_LENGTH:
-                iv += input(f'Provide data to be used as initialization vector (min size={self.IV_LENGTH}): ')
+            while len(init_vec) < self.IV_LENGTH:
+                init_vec += input(f'Provide data to be used as initialization vector (min size={self.IV_LENGTH}): ')
 
             # Get only required size
-            iv = iv[:self.IV_LENGTH]
+            init_vec = init_vec[:self.IV_LENGTH]
 
             # Check different from previous one
-            if iv.encode() == oldIV:
+            if init_vec.encode() == oldIV:
                 print('IV must not be the same as the old one, try again')
-                iv = ''
+                init_vec = ''
             else:
                 valid = True
                 break
 
-        return iv
+        return init_vec
 
     def run(self, recover=False):
         """
@@ -319,29 +324,29 @@ class Encrypter:
             * *recover* (bool): True to use default template file as input
         """
         # init required vars
-        iv = None
+        init_vec = None
         plainData = None
 
         # Read key
-        key = self.readKey()
+        key = self.read_key()
 
         if recover:
-            shutil.copy(self.TEMPLATE_FILE, self._tmpFilename)
+            shutil.copy(self.TEMPLATE_FILE, self._tmp_filename)
 
         else:
             # read encrypted file
             data = self.read()
             encryptedData = data['encryptedData']
             providedHmac = data['hmac']
-            iv = data['iv']
+            init_vec = data['iv']
 
             # check hmac
-            checkHmac = self.computeHmac(encryptedData, key)
+            checkHmac = self.compute_hmac(encryptedData, key)
             if providedHmac != checkHmac:
                 raise ValueError('HMAC comparison failed')
 
             # decrypt
-            plainData = self.decrypt(key, iv, encryptedData)
+            plainData = self.decrypt(key, init_vec, encryptedData)
 
         # edit
         newPlainData = self.edit(plainData, recover)
@@ -373,10 +378,10 @@ class Encrypter:
                     key = newKey
 
             # ask IV
-            newIv = self.askIV(iv)
+            newIv = self.askIV(init_vec)
             # encrypt
             encryptedData = self.encrypt(key, newIv, newPlainData)
-            hmac = self.computeHmac(encryptedData, key)
+            hmac = self.compute_hmac(encryptedData, key)
             self.write(newIv, hmac, encryptedData)
 
 
