@@ -2,8 +2,6 @@
 """
 Script used to write and update the encrypted init file used in PHP.
 """
-# TODO codestyle
-# TODO early return
 # TODO logging
 # TODO pathlib
 import os
@@ -14,6 +12,7 @@ import hashlib
 import hmac
 import getpass
 from datetime import datetime
+from argparse import ArgumentParser
 
 
 class Encrypter:
@@ -66,7 +65,7 @@ class Encrypter:
         return result
 
     @staticmethod
-    def compute_hmac(data: str | bytes, key: str | bytes):
+    def compute_hmac(data: str | bytes, key: str | bytes) -> None:
         """
         Compute HMAC-SHA256 of data.
 
@@ -209,7 +208,7 @@ class Encrypter:
         real_data = data[self.IV_LENGTH + self.SHA_LENGTH:]
         return {'hmac': the_hmac, 'iv': init_vec, 'encrypted_data': real_data}
 
-    def write(self, init_vec: str, the_hmac: str, data: str):
+    def write(self, init_vec: str, the_hmac: str, data: str) -> None:
         """
         Compose data and write to encrypted file.
 
@@ -253,7 +252,7 @@ class Encrypter:
             with open(self._tmp_filename, 'wb') as tmp:
                 tmp.write(plain_data)
 
-        # edit
+        # Open editor for user to do the changes
         subprocess.run(['vim', '-n', '-u', 'NONE', self._tmp_filename], check=True)
 
         # read back from tmp file and encode to bytes
@@ -311,8 +310,8 @@ class Encrypter:
             str: IV
         """
         init_vec = ''
-        valid = False
-        while not valid:
+
+        while True:
             while len(init_vec) < self.IV_LENGTH:
                 init_vec += input(
                     f'Feed data to be used as initialization vector (min size={self.IV_LENGTH}): '
@@ -322,27 +321,24 @@ class Encrypter:
             init_vec = init_vec[:self.IV_LENGTH]
 
             # Check different from previous one
-            if init_vec.encode() == old_init_vec:
-                print('IV must not be the same as the old one, try again')
-                init_vec = ''
-            else:
-                valid = True
-                break
+            if init_vec.encode() != old_init_vec:
+                return init_vec
 
-        return init_vec
+            print('IV must not be the same as the old one, try again')
+            init_vec = ''
 
-    def _change_key(self):
+    def _change_key(self) -> str | None:
         """
         Ask if want to change password.
-        """
-        return None  # Too dangerous to change this way
 
+        Returns:
+            str: new key
+        """
         change_key = input('Do you want to change password? [y/N]  ')
 
         if change_key == '' or change_key.lower()[0] != 'y':
             return None
 
-        # TODO
         new_key = self.change_password()
         if new_key is None:
             print('Failed to get new password, using previous one')
@@ -351,23 +347,76 @@ class Encrypter:
         print('Using new password, do not forget to update secret file on remote server.')
         return new_key
 
-    def _write(self):
+    def _write(self, key: str, init_vec: str, new_plain_data: str) -> None:
         """
         Write the data to the encrypted file.
+
+        Args:
+            key (str)
+            init_vec (str)
+            new_plain_data (str)
         """
-        self._change_key()
+        # new_key = self._change_key()  # too dangerous to change this way
+        new_key = None
+        if new_key is not None:
+            key = new_key
 
         # ask IV
-        newIv = self.ask_init_vec(init_vec)
+        new_iv = self.ask_init_vec(init_vec)
         # encrypt
-        encrypted_data = self.encrypt(key, newIv, new_plain_data)
-        hmac = self.compute_hmac(encrypted_data, key)
-        self.write(newIv, hmac, encrypted_data)
+        encrypted_data = self.encrypt(key, new_iv, new_plain_data)
+        the_hmac = self.compute_hmac(encrypted_data, key)
+        self.write(new_iv, the_hmac, encrypted_data)
 
-    def _write_if_changed(self):
-        pass
+    def _write_if_changed(self, key: str, init_vec: str, new_plain_data: str, plain_data: str) -> None:
+        """
+        Write the data to the encrypted file if needed.
 
-    def run(self, recover: bool = False):
+        Args:
+            key (str)
+            init_vec (str)
+            new_plain_data (str)
+            plain_data (str)
+        """
+        do_you_want_to_write = 'detected. Do you want to write the encrypted file'
+        if new_plain_data is not None:
+            confirm_write_file = input(f'Modifications {do_you_want_to_write}? [Y/n]  ')
+            if confirm_write_file.lower()[0] not in ['', 'y']:
+                return
+
+        else:
+            confirm_write_file = input(f'No modification {do_you_want_to_write} anyway? [y/N]  ')
+            if confirm_write_file.lower()[0] != 'y':
+                return
+
+            # Need to store old plain data as new
+            new_plain_data = plain_data
+
+        self._write(key, init_vec, new_plain_data)
+
+    def _read_encrypted_file(self, key: str) -> str:
+        """
+        Read the encruypted file.
+
+        Args:
+            key (str)
+
+        Returns:
+            str: decrypted content
+        """
+        data = self.read()
+        encrypted_data = data['encrypted_data']
+        provided_hmac = data['hmac']
+        init_vec = data['iv']
+
+        # check hmac
+        check_hmac = self.compute_hmac(encrypted_data, key)
+        if provided_hmac != check_hmac:
+            raise ValueError('HMAC comparison failed')
+
+        return self.decrypt(key, init_vec, encrypted_data)
+
+    def run(self, recover: bool = False) -> None:
         """
         Run the encrypter.
 
@@ -385,59 +434,14 @@ class Encrypter:
             shutil.copy(self.TEMPLATE_FILE, self._tmp_filename)
 
         else:
-            # read encrypted file
-            data = self.read()
-            encrypted_data = data['encrypted_data']
-            provided_hmac = data['hmac']
-            init_vec = data['iv']
+            plain_data = self._read_encrypted_file(key)
 
-            # check hmac
-            check_hmac = self.compute_hmac(encrypted_data, key)
-            if provided_hmac != check_hmac:
-                raise ValueError('HMAC comparison failed')
-
-            # decrypt
-            plain_data = self.decrypt(key, init_vec, encrypted_data)
-
-        # edit
         new_plain_data = self.edit(plain_data, recover)
 
-        # check if changed
-        write_file = False
-        if new_plain_data is not None:
-            confirmWriteFile = input('Modifications detected. Do you want to write the encrypted file? [Y/n]  ')
-            write_file = bool(confirmWriteFile == '' or confirmWriteFile.lower()[0] == 'y')
-        else:
-            confirmWriteFile = input('No modification detected. Do you want to write encrypted file anyway? [y/N]  ')
-            write_file = bool(confirmWriteFile != '' and confirmWriteFile.lower()[0] == 'y')
-            if write_file:
-                # Need to store old plain data as new
-                new_plain_data = plain_data
-
-        # Write procedure
-        if write_file:
-            # ask if want to change password
-            #changeKey = input('Do you want to change password? [y/N]  ')
-
-            changeKey = ''  # Too dangerous to change this way
-            if changeKey != '' and changeKey.lower()[0] == 'y':
-                newKey = self.change_password()
-                if newKey is None:
-                    print('Failed to get new password, using previous one')
-                else:
-                    print('Using new password, do not forget to update secret file on remote server.')
-                    key = newKey
-
-            # ask IV
-            newIv = self.ask_init_vec(init_vec)
-            # encrypt
-            encrypted_data = self.encrypt(key, newIv, new_plain_data)
-            hmac = self.compute_hmac(encrypted_data, key)
-            self.write(newIv, hmac, encrypted_data)
+        self._write_if_changed(key, init_vec, new_plain_data, plain_data)
 
 
-if __name__ == '__main__':
-    from argparse import ArgumentParser
+def main() -> None:
     parser = ArgumentParser()
     parser.add_argument(
         '-d',
@@ -456,3 +460,7 @@ if __name__ == '__main__':
 
     tool = Encrypter(args.debug)
     tool.run(args.recover)
+
+
+if __name__ == '__main__':
+    main()
