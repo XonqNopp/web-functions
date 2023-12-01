@@ -2,50 +2,50 @@
 """
 Script used to write and update the encrypted init file used in PHP.
 """
-# TODO logging
-# TODO pathlib
-import os
 import shutil
 import subprocess
 import base64
 import hashlib
 import hmac
 import getpass
+import logging
 from datetime import datetime
 from argparse import ArgumentParser
+from pathlib import Path
 
 
 class Encrypter:
     """
     Encrypter helper to run same processes as PHP encrypt process.
     """
-    KEY_FILE = 'yptok'
+    KEY_FILE = Path('yptok')
     KEY_MAXLENGTH = 32
 
-    ENCRYPTED_FILE = 'functions_local/init_local.aes'
+    ENCRYPTED_FILE = Path('functions_local', 'init_local.aes')
 
     IV_LENGTH = 16
     SHA_LENGTH = hashlib.sha256().digest_size
 
-    TMP_FILE = '/tmp/il'
-    TEMPLATE_FILE = 'functions/templates/init_local.php'
+    TMP_DIR = Path('/tmp')
+    TMP_FILE_BASENAME = 'iniloc'
+    TEMPLATE_FILE = Path('functions', 'templates', 'init_local.php')
 
     ENCODING = 'utf-8'
 
     def __init__(self, debug: bool = False) -> None:
         self._debug = debug
+        self._logger = logging.getLogger(self.__class__.__name__)
 
-        if self._debug > 0:
-            print(f'Running with debug mode: {self._debug}')
+        self._logger.warning(f'Running with debug mode: {self._debug}')
 
-            if self._debug > 4:
-                print('WARNING: no file writing')
+        if self._debug > 4:
+            self._logger.debug('WARNING: no file writing')
 
-        self._tmp_filename = self.TMP_FILE + datetime.strftime(datetime.utcnow(), '%Y%m%d%H%M%S%f')
-        self._tmp_filename += '.php'
+        self._tmp_file = self.TMP_DIR / (
+            self.TMP_FILE_BASENAME + datetime.strftime(datetime.utcnow(), '%Y%m%d%H%M%S%f') + '.php'
+        )
 
-        if self._debug:
-            print(f'TMP: {self._tmp_filename}')
+        self._logger.warning(f'TMP: {self._tmp_file}')
 
     @staticmethod
     def str2hex(string: str) -> str:
@@ -65,7 +65,7 @@ class Encrypter:
         return result
 
     @staticmethod
-    def compute_hmac(data: str | bytes, key: str | bytes) -> None:
+    def compute_hmac(data: str | bytes, key: str | bytes) -> bytes:
         """
         Compute HMAC-SHA256 of data.
 
@@ -90,15 +90,10 @@ class Encrypter:
         Returns:
             str: key as plain text
         """
-        key = None
-        with open(self.KEY_FILE, 'r', encoding=self.ENCODING) as key_file:
-            key = key_file.read().strip()
+        key = self.KEY_FILE.read_text().strip()
 
-        if self._debug > 4:
-            print(f'{key=}')
-
-        if self._debug > 0:
-            print(f'{len(key)=}')
+        self._logger.debug(f'{key=}')
+        self._logger.warning(f'{len(key)=}')
 
         if len(key) > self.KEY_MAXLENGTH:
             raise ValueError(
@@ -140,8 +135,7 @@ class Encrypter:
 
         command.extend(['-iv', init_vec])
 
-        if self._debug > 1:
-            print(' '.join(command))
+        self._logger.info(' '.join(command))
 
         command.extend(['-K', key])
 
@@ -169,8 +163,7 @@ class Encrypter:
         """
         plain_data = self._openssl(key, init_vec, data, encrypt=False)
 
-        if self._debug > 4:
-            print(f'decrypt={plain_data}')
+        self._logger.debug(f'decrypt={plain_data}')
 
         return plain_data
 
@@ -188,8 +181,7 @@ class Encrypter:
         """
         encrypted_data = self._openssl(key, init_vec, data, encrypt=True)
 
-        if self._debug > 1:
-            print(f'encrypt={encrypted_data}')
+        self._logger.info(f'encrypt={encrypted_data}')
 
         return encrypted_data
 
@@ -200,8 +192,7 @@ class Encrypter:
         Returns:
             dict[str bytes]: hmac, iv, data
         """
-        with open(self.ENCRYPTED_FILE, 'r', encoding=self.ENCODING) as file_handle:
-            data = base64.decodebytes(file_handle.read().strip().encode())
+        data = base64.decodebytes(self.ENCRYPTED_FILE.read_text().strip().encode())
 
         init_vec = data[:self.IV_LENGTH]
         the_hmac = data[self.IV_LENGTH:self.IV_LENGTH + self.SHA_LENGTH]
@@ -220,15 +211,17 @@ class Encrypter:
         if isinstance(init_vec, str):
             init_vec = init_vec.encode()
 
-        if self._debug > 0:
-            print(f'{init_vec=}\n{the_hmac=}')
+        self._logger.warning(f'{init_vec=}\n{the_hmac=}')
 
         if self._debug > 4:
             print('Skipping write file')
             return
 
-        with open(self.ENCRYPTED_FILE, 'w', encoding=self.ENCODING) as file_handle:
-            file_handle.write(base64.encodebytes((init_vec + the_hmac + data).encode()).decode())
+        self.ENCRYPTED_FILE.write_text(
+            base64.encodebytes(
+                (init_vec + the_hmac + data).encode()
+            ).decode()
+        )
 
     def edit(self, plain_data: str | bytes, recover: bool = False) -> bytes | None:
         """
@@ -241,26 +234,23 @@ class Encrypter:
         Returns:
             bytes: plain data edited
         """
-        if self._debug > 1:
-            print(f'edit({recover=})')
+        self._logger.info(f'edit({recover=})')
 
         if not recover:
             if isinstance(plain_data, str):
                 plain_data = plain_data.encode()
 
             # write to tmp file
-            with open(self._tmp_filename, 'wb') as tmp:
-                tmp.write(plain_data)
+            self._tmp_file.write_bytes(plain_data)  # TODO check .write_bytes
 
         # Open editor for user to do the changes
-        subprocess.run(['vim', '-n', '-u', 'NONE', self._tmp_filename], check=True)
+        subprocess.run(['vim', '-n', '-u', 'NONE', str(self._tmp_file)], check=True)
 
         # read back from tmp file and encode to bytes
-        with open(self._tmp_filename, 'r', encoding=self.ENCODING) as tmp:
-            new_plain_data = tmp.read().strip()
+        new_plain_data = self._tmp_file.read_text()
 
         # delete tmp file
-        os.remove(self._tmp_filename)
+        self._tmp_file.remove()  # TODO confirm pathlib
 
         # Check if PHP tags present
         if new_plain_data.startswith('<?php'):
@@ -294,8 +284,7 @@ class Encrypter:
             return password1
 
         # Write new password to file
-        with open(self.KEY_FILE, 'w', encoding=self.ENCODING) as key_file:
-            key_file.write(password1)
+        self.KEY_FILE.write_text(password1)
 
         return password1
 
@@ -431,7 +420,7 @@ class Encrypter:
         key = self.read_key()
 
         if recover:
-            shutil.copy(self.TEMPLATE_FILE, self._tmp_filename)
+            shutil.copy(self.TEMPLATE_FILE, self._tmp_file)
 
         else:
             plain_data = self._read_encrypted_file(key)
@@ -457,6 +446,16 @@ def main() -> None:
         help='to use the default unencrypted file as start'
     )
     args = parser.parse_args()
+
+    level = logging.ERROR
+    if args.debug == 1:
+        level = logging.WARNING
+    elif args.debug == 2:
+        level = logging.INFO
+    elif args.debug >= 3:
+        level = logging.DEBUG
+
+    logging.basicConfig(level=level)
 
     tool = Encrypter(args.debug)
     tool.run(args.recover)
