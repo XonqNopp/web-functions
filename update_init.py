@@ -2,8 +2,8 @@
 """
 Script used to write and update the encrypted init file used in PHP.
 """
-# TODO docstrings
 # TODO codestyle
+# TODO early return
 # TODO logging
 # TODO pathlib
 import os
@@ -31,7 +31,9 @@ class Encrypter:
     TMP_FILE = '/tmp/il'
     TEMPLATE_FILE = 'functions/templates/init_local.php'
 
-    def __init__(self, debug=False):
+    ENCODING = 'utf-8'
+
+    def __init__(self, debug: bool = False) -> None:
         self._debug = debug
 
         if self._debug > 0:
@@ -46,15 +48,16 @@ class Encrypter:
         if self._debug:
             print(f'TMP: {self._tmp_filename}')
 
-    def str2hex(self, string):
+    @staticmethod
+    def str2hex(string: str) -> str:
         """
         Convert string to hex"
 
         Args:
-            * *string* (str)
+            string (str)
 
         Returns:
-            hex format of string (str)
+            str: hex format of string
         """
         result = ''
         for char in string:
@@ -62,15 +65,34 @@ class Encrypter:
 
         return result
 
-    def read_key(self):
+    @staticmethod
+    def compute_hmac(data: str | bytes, key: str | bytes):
+        """
+        Compute HMAC-SHA256 of data.
+
+        Args:
+            data (str, bytes): data to hash
+            key (str, bytes): key to use for HMAC
+
+        Returns:
+            bytes: hmac
+        """
+        if isinstance(data, str):
+            data = data.encode()
+        if isinstance(key, str):
+            key = key.encode()
+
+        return hmac.new(key, msg=data, digestmod=hashlib.sha256).digest()
+
+    def read_key(self) -> str:
         """
         Read key from secret file.
 
         Returns:
-            key (str) as plain text
+            str: key as plain text
         """
         key = None
-        with open(self.KEY_FILE, 'r') as key_file:
+        with open(self.KEY_FILE, 'r', encoding=self.ENCODING) as key_file:
             key = key_file.read().strip()
 
         if self._debug > 4:
@@ -80,39 +102,24 @@ class Encrypter:
             print(f'{len(key)=}')
 
         if len(key) > self.KEY_MAXLENGTH:
-            raise ValueError(f'Key too long {len(key)}, max allowed by openssl is {self.KEY_MAXLENGTH}')
+            raise ValueError(
+                f'Key too long {len(key)}, max allowed by openssl is {self.KEY_MAXLENGTH}'
+            )
 
         return key
 
-    def compute_hmac(self, data, key):
-        """
-        Compute HMAC-SHA256 of data.
-
-        Args:
-            * *data* (str or bytes)
-
-        Returns:
-            bytes
-        """
-        if isinstance(data, str):
-            data = data.encode()
-        if isinstance(key, str):
-            key = key.encode()
-
-        return hmac.new(key, msg=data, digestmod=hashlib.sha256).digest()
-
-    def _openssl(self, key, init_vec, data, encrypt):
+    def _openssl(self, key: str, init_vec: str, data: bytes, encrypt: bool) -> str:
         """
         Execute openssl command.
 
         Args:
-            * *key* (str)
-            * *init_vec* (str)
-            * *data* (bytes)
-            * *encrypt* (bool): True to encrypt, False to decrypt
+            key (str)
+            init_vec (str)
+            data (bytes)
+            encrypt (bool): True to encrypt, False to decrypt
 
         Returns:
-            Output of openssl command (str)
+            str: Output of openssl command
         """
         if isinstance(key, bytes):
             key = key.decode()
@@ -139,175 +146,183 @@ class Encrypter:
 
         command.extend(['-K', key])
 
-        cmd = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, input=data)
+        cmd = subprocess.run(
+            command,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            input=data,
+        )
 
         return cmd.stdout
 
-    def decrypt(self, key, init_vec, data):
+    def decrypt(self, key: str, init_vec: str, data: bytes) -> str:
         """
         Decrypt data provided key and IV.
 
         Args:
-            * *key* (str)
-            * *init_vec* (str)
-            * *data* (bytes)
+            key (str)
+            init_vec (str)
+            data (bytes)
 
         Returns:
-            decrypted data (str)
+            str: decrypted data
         """
-        plainData = self._openssl(key, init_vec, data, encrypt=False)
+        plain_data = self._openssl(key, init_vec, data, encrypt=False)
 
         if self._debug > 4:
-            print(f'decrypt={plainData}')
+            print(f'decrypt={plain_data}')
 
-        return plainData
+        return plain_data
 
-    def encrypt(self, key, init_vec, data):
+    def encrypt(self, key: str, init_vec: str, data: bytes) -> str:
         """
         Encrypt data provided key and IV.
 
         Args:
-            * *key* (str)
-            * *init_vec* (str)
-            * *data* (bytes)
+            key (str)
+            init_vec (str)
+            data (bytes)
 
         Returns:
-            encrypted data (str)
+            str: encrypted data
         """
-        encryptedData = self._openssl(key, init_vec, data, encrypt=True)
+        encrypted_data = self._openssl(key, init_vec, data, encrypt=True)
 
         if self._debug > 1:
-            print(f'encrypt={encryptedData}')
+            print(f'encrypt={encrypted_data}')
 
-        return encryptedData
+        return encrypted_data
 
-    def read(self):
+    def read(self) -> dict[str, bytes]:
         """
         Read encrypted data and get the different parts of it.
 
         Returns:
-            dict(hmac, iv, data) (all are bytes)
+            dict[str bytes]: hmac, iv, data
         """
-        with open(self.ENCRYPTED_FILE, 'r') as f:
-            data = base64.decodebytes(f.read().strip().encode())
+        with open(self.ENCRYPTED_FILE, 'r', encoding=self.ENCODING) as file_handle:
+            data = base64.decodebytes(file_handle.read().strip().encode())
 
         init_vec = data[:self.IV_LENGTH]
-        hmac = data[self.IV_LENGTH:self.IV_LENGTH + self.SHA_LENGTH]
-        realData = data[self.IV_LENGTH + self.SHA_LENGTH:]
-        return {'hmac': hmac, 'iv': init_vec, 'encryptedData': realData}
+        the_hmac = data[self.IV_LENGTH:self.IV_LENGTH + self.SHA_LENGTH]
+        real_data = data[self.IV_LENGTH + self.SHA_LENGTH:]
+        return {'hmac': the_hmac, 'iv': init_vec, 'encrypted_data': real_data}
 
-    def write(self, init_vec, hmac, data):
+    def write(self, init_vec: str, the_hmac: str, data: str):
         """
         Compose data and write to encrypted file.
 
         Args:
-            * *init_vec* (str)
-            * *hmac* (str)
-            * *data* (str)
+            init_vec (str)
+            the_hmac (str)
+            data (str)
         """
         if isinstance(init_vec, str):
             init_vec = init_vec.encode()
 
         if self._debug > 0:
-            print(f'{init_vec=}\n{hmac=}')
+            print(f'{init_vec=}\n{the_hmac=}')
 
         if self._debug > 4:
             print('Skipping write file')
             return
 
-        with open(self.ENCRYPTED_FILE, 'w') as f:
-            f.write(base64.encodebytes(init_vec + hmac + data).decode())
+        with open(self.ENCRYPTED_FILE, 'w', encoding=self.ENCODING) as file_handle:
+            file_handle.write(base64.encodebytes((init_vec + the_hmac + data).encode()).decode())
 
-    def edit(self, plainData, recover=False):
+    def edit(self, plain_data: str | bytes, recover: bool = False) -> bytes | None:
         """
         Edit the plain data.
 
         Args:
-            * *plainData* (str or bytes)
-            * *recover* (bool): do not use plain data, only tmp file
+            plain_data (str, bytes)
+            recover (bool): do not use plain data, only tmp file
 
         Returns:
-            plain data edited (bytes)
+            bytes: plain data edited
         """
         if self._debug > 1:
             print(f'edit({recover=})')
 
         if not recover:
-            if isinstance(plainData, str):
-                plainData = plainData.encode()
+            if isinstance(plain_data, str):
+                plain_data = plain_data.encode()
 
             # write to tmp file
             with open(self._tmp_filename, 'wb') as tmp:
-                tmp.write(plainData)
+                tmp.write(plain_data)
 
         # edit
-        subprocess.run(['vim', '-n', '-u', 'NONE', self._tmp_filename])
+        subprocess.run(['vim', '-n', '-u', 'NONE', self._tmp_filename], check=True)
 
         # read back from tmp file and encode to bytes
-        with open(self._tmp_filename, 'r') as tmp:
-            newPlainData = tmp.read().strip()
+        with open(self._tmp_filename, 'r', encoding=self.ENCODING) as tmp:
+            new_plain_data = tmp.read().strip()
 
         # delete tmp file
         os.remove(self._tmp_filename)
 
         # Check if PHP tags present
-        if newPlainData.startswith('<?php'):
+        if new_plain_data.startswith('<?php'):
             raise ValueError('You forgot to remove the PHP tags kept for editor formatting, abort')
 
         # Convert to bytes
-        newPlainData = newPlainData.encode()
+        new_plain_data = new_plain_data.encode()
 
         # check if modifications
-        if newPlainData == plainData:
-            newPlainData = None
+        if new_plain_data == plain_data:
+            return None
 
-        return newPlainData
+        return new_plain_data
 
-    def changePassword(self):
+    def change_password(self) -> str | None:
         """
         Change password and write to file.
 
         .. warning:: Do not forget to copy the new key file on the remote server.
 
         Returns:
-            the new password
+            str: the new password
         """
-        p1 = getpass.getpass('  Enter the new password: ')
-        p2 = getpass.getpass('Confirm the new password: ')
-        if p1 != p2:
+        password1 = getpass.getpass('  Enter the new password: ')
+        password2 = getpass.getpass('Confirm the new password: ')
+        if password1 != password2:
             return None
 
         if self._debug > 4:
-            print(f'Skipping writing new password: {p1}')
-            return p1
+            print(f'Skipping writing new password: {password1}')
+            return password1
 
         # Write new password to file
-        with open(self.KEY_FILE, 'w') as key_file:
-            key_file.write(p1)
+        with open(self.KEY_FILE, 'w', encoding=self.ENCODING) as key_file:
+            key_file.write(password1)
 
-        return p1
+        return password1
 
-    def askIV(self, oldIV):
+    def ask_init_vec(self, old_init_vec: str) -> str:
         """
         Ask for initialization vector data.
 
         Args:
-            * *oldIV* (str)
+            old_init_vec (str)
 
         Returns:
-            IV (str)
+            str: IV
         """
         init_vec = ''
         valid = False
         while not valid:
             while len(init_vec) < self.IV_LENGTH:
-                init_vec += input(f'Provide data to be used as initialization vector (min size={self.IV_LENGTH}): ')
+                init_vec += input(
+                    f'Feed data to be used as initialization vector (min size={self.IV_LENGTH}): '
+                )
 
             # Get only required size
             init_vec = init_vec[:self.IV_LENGTH]
 
             # Check different from previous one
-            if init_vec.encode() == oldIV:
+            if init_vec.encode() == old_init_vec:
                 print('IV must not be the same as the old one, try again')
                 init_vec = ''
             else:
@@ -316,16 +331,52 @@ class Encrypter:
 
         return init_vec
 
-    def run(self, recover=False):
+    def _change_key(self):
+        """
+        Ask if want to change password.
+        """
+        return None  # Too dangerous to change this way
+
+        change_key = input('Do you want to change password? [y/N]  ')
+
+        if change_key == '' or change_key.lower()[0] != 'y':
+            return None
+
+        # TODO
+        new_key = self.change_password()
+        if new_key is None:
+            print('Failed to get new password, using previous one')
+            return None
+
+        print('Using new password, do not forget to update secret file on remote server.')
+        return new_key
+
+    def _write(self):
+        """
+        Write the data to the encrypted file.
+        """
+        self._change_key()
+
+        # ask IV
+        newIv = self.ask_init_vec(init_vec)
+        # encrypt
+        encrypted_data = self.encrypt(key, newIv, new_plain_data)
+        hmac = self.compute_hmac(encrypted_data, key)
+        self.write(newIv, hmac, encrypted_data)
+
+    def _write_if_changed(self):
+        pass
+
+    def run(self, recover: bool = False):
         """
         Run the encrypter.
 
         Args:
-            * *recover* (bool): True to use default template file as input
+            recover (bool): True to use default template file as input
         """
         # init required vars
         init_vec = None
-        plainData = None
+        plain_data = None
 
         # Read key
         key = self.read_key()
@@ -336,41 +387,41 @@ class Encrypter:
         else:
             # read encrypted file
             data = self.read()
-            encryptedData = data['encryptedData']
-            providedHmac = data['hmac']
+            encrypted_data = data['encrypted_data']
+            provided_hmac = data['hmac']
             init_vec = data['iv']
 
             # check hmac
-            checkHmac = self.compute_hmac(encryptedData, key)
-            if providedHmac != checkHmac:
+            check_hmac = self.compute_hmac(encrypted_data, key)
+            if provided_hmac != check_hmac:
                 raise ValueError('HMAC comparison failed')
 
             # decrypt
-            plainData = self.decrypt(key, init_vec, encryptedData)
+            plain_data = self.decrypt(key, init_vec, encrypted_data)
 
         # edit
-        newPlainData = self.edit(plainData, recover)
+        new_plain_data = self.edit(plain_data, recover)
 
         # check if changed
-        writeFile = False
-        if newPlainData is not None:
+        write_file = False
+        if new_plain_data is not None:
             confirmWriteFile = input('Modifications detected. Do you want to write the encrypted file? [Y/n]  ')
-            writeFile = bool(confirmWriteFile == '' or confirmWriteFile.lower()[0] == 'y')
+            write_file = bool(confirmWriteFile == '' or confirmWriteFile.lower()[0] == 'y')
         else:
             confirmWriteFile = input('No modification detected. Do you want to write encrypted file anyway? [y/N]  ')
-            writeFile = bool(confirmWriteFile != '' and confirmWriteFile.lower()[0] == 'y')
-            if writeFile:
+            write_file = bool(confirmWriteFile != '' and confirmWriteFile.lower()[0] == 'y')
+            if write_file:
                 # Need to store old plain data as new
-                newPlainData = plainData
+                new_plain_data = plain_data
 
         # Write procedure
-        if writeFile:
+        if write_file:
             # ask if want to change password
             #changeKey = input('Do you want to change password? [y/N]  ')
 
             changeKey = ''  # Too dangerous to change this way
             if changeKey != '' and changeKey.lower()[0] == 'y':
-                newKey = self.changePassword()
+                newKey = self.change_password()
                 if newKey is None:
                     print('Failed to get new password, using previous one')
                 else:
@@ -378,11 +429,11 @@ class Encrypter:
                     key = newKey
 
             # ask IV
-            newIv = self.askIV(init_vec)
+            newIv = self.ask_init_vec(init_vec)
             # encrypt
-            encryptedData = self.encrypt(key, newIv, newPlainData)
-            hmac = self.compute_hmac(encryptedData, key)
-            self.write(newIv, hmac, encryptedData)
+            encrypted_data = self.encrypt(key, newIv, new_plain_data)
+            hmac = self.compute_hmac(encrypted_data, key)
+            self.write(newIv, hmac, encrypted_data)
 
 
 if __name__ == '__main__':
