@@ -38,8 +38,8 @@ class Encrypter:
 
         self._logger.warning(f'Running with debug mode: {self._debug}')
 
-        if self._debug > 4:
-            self._logger.debug('WARNING: no file writing')
+        if self._debug > 3:
+            self._logger.error('WARNING: no file writing')
 
         self._tmp_file = self.TMP_DIR / (
             self.TMP_FILE_BASENAME + datetime.strftime(datetime.utcnow(), '%Y%m%d%H%M%S%f') + '.php'
@@ -102,7 +102,7 @@ class Encrypter:
 
         return key
 
-    def _openssl(self, key: str, init_vec: str, data: bytes, encrypt: bool) -> str:
+    def _openssl(self, key: str, init_vec: str, data: bytes, encrypt: bool) -> bytes:
         """
         Execute openssl command.
 
@@ -113,7 +113,7 @@ class Encrypter:
             encrypt (bool): True to encrypt, False to decrypt
 
         Returns:
-            str: Output of openssl command
+            bytes: Output of openssl command
         """
         if isinstance(key, bytes):
             key = key.decode()
@@ -149,7 +149,7 @@ class Encrypter:
 
         return cmd.stdout
 
-    def decrypt(self, key: str, init_vec: str, data: bytes) -> str:
+    def decrypt(self, key: str, init_vec: str, data: bytes) -> bytes:
         """
         Decrypt data provided key and IV.
 
@@ -159,15 +159,15 @@ class Encrypter:
             data (bytes)
 
         Returns:
-            str: decrypted data
+            bytes: decrypted data
         """
         plain_data = self._openssl(key, init_vec, data, encrypt=False)
 
-        self._logger.debug(f'decrypt={plain_data}')
+        self._logger.debug(f'decrypt={plain_data.decode()}')
 
         return plain_data
 
-    def encrypt(self, key: str, init_vec: str, data: bytes) -> str:
+    def encrypt(self, key: str, init_vec: str, data: bytes) -> bytes:
         """
         Encrypt data provided key and IV.
 
@@ -177,11 +177,11 @@ class Encrypter:
             data (bytes)
 
         Returns:
-            str: encrypted data
+            bytes: encrypted data
         """
         encrypted_data = self._openssl(key, init_vec, data, encrypt=True)
 
-        self._logger.info(f'encrypt={encrypted_data}')
+        self._logger.info(f'encrypt={encrypted_data.decode()}')
 
         return encrypted_data
 
@@ -213,7 +213,7 @@ class Encrypter:
 
         self._logger.warning(f'{init_vec=}\n{the_hmac=}')
 
-        if self._debug > 4:
+        if self._debug > 3:
             print('Skipping write file')
             return
 
@@ -247,23 +247,23 @@ class Encrypter:
         subprocess.run(['vim', '-n', '-u', 'NONE', str(self._tmp_file)], check=True)
 
         # read back from tmp file and encode to bytes
-        new_plain_data = self._tmp_file.read_text()
+        new_plain_str = self._tmp_file.read_text()
 
         # delete tmp file
         self._tmp_file.remove()  # TODO confirm pathlib
 
         # Check if PHP tags present
-        if new_plain_data.startswith('<?php'):
+        if new_plain_str.startswith('<?php'):
             raise ValueError('You forgot to remove the PHP tags kept for editor formatting, abort')
 
         # Convert to bytes
-        new_plain_data = new_plain_data.encode()
+        new_plain_bytes = new_plain_str.encode()
 
         # check if modifications
-        if new_plain_data == plain_data:
+        if new_plain_bytes == plain_data:
             return None
 
-        return new_plain_data
+        return new_plain_bytes
 
     def change_password(self) -> str | None:
         """
@@ -279,7 +279,7 @@ class Encrypter:
         if password1 != password2:
             return None
 
-        if self._debug > 4:
+        if self._debug > 3:
             print(f'Skipping writing new password: {password1}')
             return password1
 
@@ -432,19 +432,22 @@ class Encrypter:
 
 def main() -> None:
     parser = ArgumentParser()
+
     parser.add_argument(
         '-d',
         '--debug',
         action='count',
         default=0,
-        help='debug mode, from level 5 file writing is disabled'
+        help='debug mode, from level 4 file writing is disabled'
     )
+
     parser.add_argument(
         '--recover',
         action='store_true',
         default=False,
         help='to use the default unencrypted file as start'
     )
+
     args = parser.parse_args()
 
     level = logging.ERROR
