@@ -250,7 +250,7 @@ class Encrypter:
         new_plain_str = self._tmp_file.read_text()
 
         # delete tmp file
-        self._tmp_file.remove()  # TODO confirm pathlib
+        self._tmp_file.unlink()
 
         # Check if PHP tags present
         if new_plain_str.startswith('<?php'):
