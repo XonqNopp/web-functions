@@ -102,28 +102,22 @@ class Encrypter:
 
         return key
 
-    def _openssl(self, key: str, init_vec: str, data: bytes, encrypt: bool) -> bytes:
+    def _openssl(self, key: bytes, init_vec: bytes, data: bytes, encrypt: bool) -> bytes:
         """
         Execute openssl command.
 
         Args:
-            key (str)
-            init_vec (str)
+            key (bytes)
+            init_vec (bytes)
             data (bytes)
             encrypt (bool): True to encrypt, False to decrypt
 
         Returns:
             bytes: Output of openssl command
         """
-        if isinstance(key, bytes):
-            key = key.decode()
+        key_str = self.str2hex(key.decode())
 
-        key = self.str2hex(key)
-
-        if isinstance(init_vec, bytes):
-            init_vec = init_vec.decode()
-
-        init_vec = self.str2hex(init_vec)
+        init_vec_str = self.str2hex(init_vec.decode())
 
         command = ['openssl', 'enc', '-aes-256-cbc']
 
@@ -133,11 +127,11 @@ class Encrypter:
         else:
             command.append('-d')
 
-        command.extend(['-iv', init_vec])
+        command.extend(['-iv', init_vec_str])
 
         self._logger.info(' '.join(command))
 
-        command.extend(['-K', key])
+        command.extend(['-K', key_str])
 
         cmd = subprocess.run(
             command,
@@ -149,13 +143,13 @@ class Encrypter:
 
         return cmd.stdout
 
-    def decrypt(self, key: str, init_vec: str, data: bytes) -> bytes:
+    def decrypt(self, key: bytes, init_vec: bytes, data: bytes) -> bytes:
         """
         Decrypt data provided key and IV.
 
         Args:
-            key (str)
-            init_vec (str)
+            key (bytes)
+            init_vec (bytes)
             data (bytes)
 
         Returns:
@@ -167,13 +161,13 @@ class Encrypter:
 
         return plain_data
 
-    def encrypt(self, key: str, init_vec: str, data: bytes) -> bytes:
+    def encrypt(self, key: bytes, init_vec: bytes, data: bytes) -> bytes:
         """
         Encrypt data provided key and IV.
 
         Args:
-            key (str)
-            init_vec (str)
+            key (bytes)
+            init_vec (bytes)
             data (bytes)
 
         Returns:
@@ -190,24 +184,25 @@ class Encrypter:
         Read encrypted data and get the different parts of it.
 
         Returns:
-            dict[str bytes]: hmac, iv, data
+            dict[str bytes]: hmac, init_vec, data
         """
         data = base64.decodebytes(self.ENCRYPTED_FILE.read_text().strip().encode())
 
         init_vec = data[:self.IV_LENGTH]
         the_hmac = data[self.IV_LENGTH:self.IV_LENGTH + self.SHA_LENGTH]
         real_data = data[self.IV_LENGTH + self.SHA_LENGTH:]
-        return {'hmac': the_hmac, 'iv': init_vec, 'encrypted_data': real_data}
+        return {'hmac': the_hmac, 'init_vec': init_vec, 'encrypted_data': real_data}
 
-    def write(self, init_vec: str, the_hmac: str, data: str) -> None:
+    def write(self, init_vec: bytes, the_hmac: bytes, data: bytes) -> None:
         """
         Compose data and write to encrypted file.
 
         Args:
-            init_vec (str)
-            the_hmac (str)
-            data (str)
+            init_vec (bytes)
+            the_hmac (bytes)
+            data (bytes)
         """
+        # TODO I WAS HERE
         if isinstance(init_vec, str):
             init_vec = init_vec.encode()
 
@@ -218,9 +213,7 @@ class Encrypter:
             return
 
         self.ENCRYPTED_FILE.write_text(
-            base64.encodebytes(
-                (init_vec + the_hmac + data).encode()
-            ).decode()
+            base64.encodebytes(init_vec + the_hmac + data).decode()
         )
 
     def edit(self, plain_data: str | bytes, recover: bool = False) -> bytes | None:
@@ -241,7 +234,7 @@ class Encrypter:
                 plain_data = plain_data.encode()
 
             # write to tmp file
-            self._tmp_file.write_bytes(plain_data)  # TODO check .write_bytes
+            self._tmp_file.write_bytes(plain_data)
 
         # Open editor for user to do the changes
         subprocess.run(['vim', '-n', '-u', 'NONE', str(self._tmp_file)], check=True)
@@ -288,15 +281,15 @@ class Encrypter:
 
         return password1
 
-    def ask_init_vec(self, old_init_vec: str) -> str:
+    def ask_init_vec(self, old_init_vec: bytes) -> str:
         """
         Ask for initialization vector data.
 
         Args:
-            old_init_vec (str)
+            old_init_vec (bytes)
 
         Returns:
-            str: IV
+            str: init vec
         """
         init_vec = ''
 
@@ -350,8 +343,8 @@ class Encrypter:
         if new_key is not None:
             key = new_key
 
-        # ask IV
         new_iv = self.ask_init_vec(init_vec)
+
         # encrypt
         encrypted_data = self.encrypt(key, new_iv, new_plain_data)
         the_hmac = self.compute_hmac(encrypted_data, key)
@@ -383,7 +376,7 @@ class Encrypter:
 
         self._write(key, init_vec, new_plain_data)
 
-    def _read_encrypted_file(self, key: str) -> str:
+    def _read_encrypted_file(self, key: str) -> dict[str, str | bytes]:
         """
         Read the encruypted file.
 
@@ -391,19 +384,19 @@ class Encrypter:
             key (str)
 
         Returns:
-            str: decrypted content
+            dict[str, str]: dict(plain_data: decrypted content, init_vec: initialization vector)
         """
         data = self.read()
         encrypted_data = data['encrypted_data']
         provided_hmac = data['hmac']
-        init_vec = data['iv']
+        init_vec = data['init_vec']
 
         # check hmac
         check_hmac = self.compute_hmac(encrypted_data, key)
         if provided_hmac != check_hmac:
             raise ValueError('HMAC comparison failed')
 
-        return self.decrypt(key, init_vec, encrypted_data)
+        return {'plain_data': self.decrypt(key, init_vec, encrypted_data), 'init_vec': init_vec}
 
     def run(self, recover: bool = False) -> None:
         """
@@ -413,7 +406,6 @@ class Encrypter:
             recover (bool): True to use default template file as input
         """
         # init required vars
-        init_vec = None
         plain_data = None
 
         # Read key
@@ -423,7 +415,9 @@ class Encrypter:
             shutil.copy(self.TEMPLATE_FILE, self._tmp_file)
 
         else:
-            plain_data = self._read_encrypted_file(key)
+            encrypted_contents = self._read_encrypted_file(key)
+            plain_data = encrypted_contents['plain_data']
+            init_vec = encrypted_contents['init_vec']
 
         new_plain_data = self.edit(plain_data, recover)
 
