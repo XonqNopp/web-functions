@@ -65,32 +65,31 @@ class Encrypter:
         return result
 
     @staticmethod
-    def compute_hmac(data: str | bytes, key: str | bytes) -> bytes:
+    def compute_hmac(data: str | bytes, key: bytes) -> bytes:
         """
         Compute HMAC-SHA256 of data.
 
         Args:
             data (str, bytes): data to hash
-            key (str, bytes): key to use for HMAC
+            key (bytes): key to use for HMAC
 
         Returns:
             bytes: hmac
         """
+        # TODO
         if isinstance(data, str):
             data = data.encode()
-        if isinstance(key, str):
-            key = key.encode()
 
         return hmac.new(key, msg=data, digestmod=hashlib.sha256).digest()
 
-    def read_key(self) -> str:
+    def read_key(self) -> bytes:
         """
         Read key from secret file.
 
         Returns:
-            str: key as plain text
+            bytes: key as plain text
         """
-        key = self.KEY_FILE.read_text().strip()
+        key = self.KEY_FILE.read_text().strip().encode()
 
         self._logger.debug(f'{key=}')
         self._logger.warning(f'{len(key)=}')
@@ -184,7 +183,7 @@ class Encrypter:
         Read encrypted data and get the different parts of it.
 
         Returns:
-            dict[str bytes]: hmac, init_vec, data
+            dict[str, bytes]: hmac, init_vec, data
         """
         data = base64.decodebytes(self.ENCRYPTED_FILE.read_text().strip().encode())
 
@@ -202,10 +201,6 @@ class Encrypter:
             the_hmac (bytes)
             data (bytes)
         """
-        # TODO I WAS HERE
-        if isinstance(init_vec, str):
-            init_vec = init_vec.encode()
-
         self._logger.warning(f'{init_vec=}\n{the_hmac=}')
 
         if self._debug > 3:
@@ -216,12 +211,12 @@ class Encrypter:
             base64.encodebytes(init_vec + the_hmac + data).decode()
         )
 
-    def edit(self, plain_data: str | bytes, recover: bool = False) -> bytes | None:
+    def edit(self, plain_data: bytes | None, recover: bool = False) -> bytes | None:
         """
         Edit the plain data.
 
         Args:
-            plain_data (str, bytes)
+            plain_data (bytes)
             recover (bool): do not use plain data, only tmp file
 
         Returns:
@@ -230,10 +225,10 @@ class Encrypter:
         self._logger.info(f'edit({recover=})')
 
         if not recover:
-            if isinstance(plain_data, str):
-                plain_data = plain_data.encode()
-
             # write to tmp file
+            if plain_data is None:
+                raise ValueError('plain data can be None only for recover mode')
+
             self._tmp_file.write_bytes(plain_data)
 
         # Open editor for user to do the changes
@@ -258,14 +253,14 @@ class Encrypter:
 
         return new_plain_bytes
 
-    def change_password(self) -> str | None:
+    def change_password(self) -> bytes | None:
         """
         Change password and write to file.
 
         .. warning:: Do not forget to copy the new key file on the remote server.
 
         Returns:
-            str: the new password
+            bytes: the new password
         """
         password1 = getpass.getpass('  Enter the new password: ')
         password2 = getpass.getpass('Confirm the new password: ')
@@ -274,14 +269,14 @@ class Encrypter:
 
         if self._debug > 3:
             print(f'Skipping writing new password: {password1}')
-            return password1
+            return password1.encode()
 
         # Write new password to file
         self.KEY_FILE.write_text(password1)
 
-        return password1
+        return password1.encode()
 
-    def ask_init_vec(self, old_init_vec: bytes) -> str:
+    def ask_init_vec(self, old_init_vec: bytes) -> bytes:
         """
         Ask for initialization vector data.
 
@@ -291,30 +286,31 @@ class Encrypter:
         Returns:
             str: init vec
         """
-        init_vec = ''
+        init_vec_str = ''
 
         while True:
-            while len(init_vec) < self.IV_LENGTH:
-                init_vec += input(
+            while len(init_vec_str) < self.IV_LENGTH:
+                init_vec_str += input(
                     f'Feed data to be used as initialization vector (min size={self.IV_LENGTH}): '
                 )
 
             # Get only required size
-            init_vec = init_vec[:self.IV_LENGTH]
+            init_vec_str = init_vec_str[:self.IV_LENGTH]
 
             # Check different from previous one
-            if init_vec.encode() != old_init_vec:
+            init_vec = init_vec_str.encode()
+            if init_vec != old_init_vec:
                 return init_vec
 
             print('IV must not be the same as the old one, try again')
-            init_vec = ''
+            init_vec_str = ''
 
-    def _change_key(self) -> str | None:
+    def _change_key(self) -> bytes | None:
         """
         Ask if want to change password.
 
         Returns:
-            str: new key
+            bytes: new key
         """
         change_key = input('Do you want to change password? [y/N]  ')
 
@@ -329,14 +325,14 @@ class Encrypter:
         print('Using new password, do not forget to update secret file on remote server.')
         return new_key
 
-    def _write(self, key: str, init_vec: str, new_plain_data: str) -> None:
+    def _write(self, key: bytes, init_vec: bytes, new_plain_data: bytes) -> None:
         """
         Write the data to the encrypted file.
 
         Args:
-            key (str)
-            init_vec (str)
-            new_plain_data (str)
+            key (bytes)
+            init_vec (bytes)
+            new_plain_data (bytes)
         """
         # new_key = self._change_key()  # too dangerous to change this way
         new_key = None
@@ -350,15 +346,15 @@ class Encrypter:
         the_hmac = self.compute_hmac(encrypted_data, key)
         self.write(new_iv, the_hmac, encrypted_data)
 
-    def _write_if_changed(self, key: str, init_vec: str, new_plain_data: str, plain_data: str) -> None:
+    def _write_if_changed(self, key: bytes, init_vec: bytes, new_plain_data: bytes | None, plain_data: bytes) -> None:
         """
         Write the data to the encrypted file if needed.
 
         Args:
-            key (str)
-            init_vec (str)
-            new_plain_data (str)
-            plain_data (str)
+            key (bytes)
+            init_vec (bytes)
+            new_plain_data (bytes)
+            plain_data (bytes)
         """
         do_you_want_to_write = 'detected. Do you want to write the encrypted file'
         if new_plain_data is not None:
@@ -376,15 +372,15 @@ class Encrypter:
 
         self._write(key, init_vec, new_plain_data)
 
-    def _read_encrypted_file(self, key: str) -> dict[str, str | bytes]:
+    def _read_encrypted_file(self, key: bytes) -> dict[str, bytes]:
         """
         Read the encruypted file.
 
         Args:
-            key (str)
+            key (bytes)
 
         Returns:
-            dict[str, str]: dict(plain_data: decrypted content, init_vec: initialization vector)
+            dict[str, bytes]: dict(plain_data, hmac, init_vec)
         """
         data = self.read()
         encrypted_data = data['encrypted_data']
@@ -420,6 +416,9 @@ class Encrypter:
             init_vec = encrypted_contents['init_vec']
 
         new_plain_data = self.edit(plain_data, recover)
+
+        if new_plain_data is None and plain_data is None:
+            return
 
         self._write_if_changed(key, init_vec, new_plain_data, plain_data)
 
