@@ -346,7 +346,8 @@ class Encrypter:
         the_hmac = self.compute_hmac(encrypted_data, key)
         self.write(new_iv, the_hmac, encrypted_data)
 
-    def _write_if_changed(self, key: bytes, init_vec: bytes, new_plain_data: bytes | None, plain_data: bytes) -> None:
+    def _write_if_changed(self, key: bytes, init_vec: bytes, new_plain_data: bytes | None, plain_data: bytes | None
+                          ) -> None:
         """
         Write the data to the encrypted file if needed.
 
@@ -357,18 +358,21 @@ class Encrypter:
             plain_data (bytes)
         """
         do_you_want_to_write = 'detected. Do you want to write the encrypted file'
-        if new_plain_data is not None:
-            confirm_write_file = input(f'Modifications {do_you_want_to_write}? [Y/n]  ')
-            if confirm_write_file.lower()[0] not in ['', 'y']:
-                return
 
-        else:
+        if new_plain_data is None:
             confirm_write_file = input(f'No modification {do_you_want_to_write} anyway? [y/N]  ')
             if confirm_write_file.lower()[0] != 'y':
                 return
 
-            # Need to store old plain data as new
-            new_plain_data = plain_data
+            if plain_data is None:
+                raise ValueError('Cannot have both plain_data and new_plain_data equal to None')
+
+            self._write(key, init_vec, plain_data)
+            return
+
+        confirm_write_file = input(f'Modifications {do_you_want_to_write}? [Y/n]  ')
+        if confirm_write_file.lower()[0] not in ['', 'y']:
+            return
 
         self._write(key, init_vec, new_plain_data)
 
