@@ -32,14 +32,12 @@ class Encrypter:
 
     ENCODING = 'utf-8'
 
-    def __init__(self, debug: bool = False) -> None:
-        self._debug = debug
+    def __init__(self, dryrun: bool = False) -> None:
+        self._dryrun = dryrun
         self._logger = logging.getLogger(self.__class__.__name__)
 
-        self._logger.warning(f'Running with debug mode: {self._debug}')
-
-        if self._debug > 3:
-            self._logger.error('WARNING: no file writing')
+        if self._dryrun:
+            self._logger.error('WARNING: dry run - no file writing')
 
         self._tmp_file = self.TMP_DIR / (
             self.TMP_FILE_BASENAME + datetime.strftime(datetime.utcnow(), '%Y%m%d%H%M%S%f') + '.php'
@@ -203,7 +201,7 @@ class Encrypter:
         """
         self._logger.warning(f'{init_vec=}\n{the_hmac=}')
 
-        if self._debug > 3:
+        if self._dryrun:
             print('Skipping write file')
             return
 
@@ -267,7 +265,7 @@ class Encrypter:
         if password1 != password2:
             return None
 
-        if self._debug > 3:
+        if self._dryrun:
             print(f'Skipping writing new password: {password1}')
             return password1.encode()
 
@@ -457,7 +455,7 @@ def main() -> None:
 
     logging.basicConfig(level=level)
 
-    tool = Encrypter(args.debug)
+    tool = Encrypter(args.debug > 3)
     tool.run(args.recover)
 
 
