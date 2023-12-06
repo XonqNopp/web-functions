@@ -89,9 +89,6 @@ class Encrypter:
         """
         key = self.KEY_FILE.read_text().strip().encode()
 
-        self._logger.debug(f'{key=}')
-        self._logger.warning(f'{len(key)=}')
-
         if len(key) > self.KEY_MAXLENGTH:
             raise ValueError(
                 f'Key too long {len(key)}, max allowed by openssl is {self.KEY_MAXLENGTH}'
@@ -152,11 +149,7 @@ class Encrypter:
         Returns:
             bytes: decrypted data
         """
-        plain_data = self._openssl(key, init_vec, data, encrypt=False)
-
-        self._logger.debug(f'decrypt={plain_data.decode()}')
-
-        return plain_data
+        return self._openssl(key, init_vec, data, encrypt=False)
 
     def encrypt(self, key: bytes, init_vec: bytes, data: bytes) -> bytes:
         """
@@ -172,7 +165,7 @@ class Encrypter:
         """
         encrypted_data = self._openssl(key, init_vec, data, encrypt=True)
 
-        self._logger.info(f'encrypt={encrypted_data.decode()}')
+        self._logger.debug(f'encrypt={encrypted_data!r}')
 
         return encrypted_data
 
@@ -359,7 +352,8 @@ class Encrypter:
 
         if new_plain_data is None:
             confirm_write_file = input(f'No modification {do_you_want_to_write} anyway? [y/N]  ')
-            if confirm_write_file.lower()[0] != 'y':
+            if confirm_write_file == '' or confirm_write_file.lower()[0] != 'y':
+                print('Not writing. Bye.')
                 return
 
             if plain_data is None:
@@ -369,7 +363,8 @@ class Encrypter:
             return
 
         confirm_write_file = input(f'Modifications {do_you_want_to_write}? [Y/n]  ')
-        if confirm_write_file.lower()[0] not in ['', 'y']:
+        if confirm_write_file != '' and confirm_write_file.lower()[0] != 'y':
+            print('Not writing. Bye.')
             return
 
         self._write(key, init_vec, new_plain_data)
