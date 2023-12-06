@@ -192,8 +192,6 @@ class Encrypter:
             the_hmac (bytes)
             data (bytes)
         """
-        self._logger.warning(f'{init_vec=}\n{the_hmac=}')
-
         if self._dryrun:
             print('Skipping write file')
             return
@@ -202,23 +200,26 @@ class Encrypter:
             base64.encodebytes(init_vec + the_hmac + data).decode()
         )
 
-    def edit(self, plain_data: bytes | None, recover: bool = False) -> bytes | None:
+    def edit(self, plain_data: bytes | None, initialize: bool = False) -> bytes | None:
         """
         Edit the plain data.
 
         Args:
             plain_data (bytes)
-            recover (bool): do not use plain data, only tmp file
+            initialize (bool): do not use plain data, only tmp file
 
         Returns:
             bytes: plain data edited
         """
-        self._logger.info(f'edit({recover=})')
+        self._logger.info(f'edit(plain_data, {initialize=})')
 
-        if not recover:
+        if initialize:
+            shutil.copy(self.TEMPLATE_FILE, self._tmp_file)
+
+        else:
             # write to tmp file
             if plain_data is None:
-                raise ValueError('plain data can be None only for recover mode')
+                raise ValueError('plain data can be None only for initialize mode')
 
             self._tmp_file.write_bytes(plain_data)
 
@@ -267,7 +268,7 @@ class Encrypter:
 
         return password1.encode()
 
-    def ask_init_vec(self, old_init_vec: bytes) -> bytes:
+    def ask_init_vec(self, old_init_vec: bytes | None) -> bytes:
         """
         Ask for initialization vector data.
 
@@ -282,11 +283,12 @@ class Encrypter:
         while True:
             while len(init_vec_str) < self.IV_LENGTH:
                 init_vec_str += input(
-                    f'Feed data to be used as initialization vector (min size={self.IV_LENGTH}): '
+                    f'Feed data to be used as initialization vector (size={self.IV_LENGTH}): '
                 )
 
             # Get only required size
             init_vec_str = init_vec_str[:self.IV_LENGTH]
+            self._logger.warning(f'{init_vec_str=} ({old_init_vec=!r})')
 
             # Check different from previous one
             init_vec = init_vec_str.encode()
@@ -316,7 +318,7 @@ class Encrypter:
         print('Using new password, do not forget to update secret file on remote server.')
         return new_key
 
-    def _write(self, key: bytes, init_vec: bytes, new_plain_data: bytes) -> None:
+    def _write(self, key: bytes, init_vec: bytes | None, new_plain_data: bytes) -> None:
         """
         Write the data to the encrypted file.
 
@@ -337,8 +339,8 @@ class Encrypter:
         the_hmac = self.compute_hmac(encrypted_data, key)
         self.write(new_iv, the_hmac, encrypted_data)
 
-    def _write_if_changed(self, key: bytes, init_vec: bytes, new_plain_data: bytes | None, plain_data: bytes | None
-                          ) -> None:
+    def _write_if_changed(self, key: bytes, init_vec: bytes | None,
+                          new_plain_data: bytes | None, plain_data: bytes | None) -> None:
         """
         Write the data to the encrypted file if needed.
 
@@ -369,16 +371,20 @@ class Encrypter:
 
         self._write(key, init_vec, new_plain_data)
 
-    def _read_encrypted_file(self, key: bytes) -> dict[str, bytes]:
+    def _read_encrypted_file(self, key: bytes, initialize: bool) -> dict[str, bytes | None]:
         """
         Read the encruypted file.
 
         Args:
             key (bytes)
+            initialize (bool): True to not read but take the default template file
 
         Returns:
             dict[str, bytes]: dict(plain_data, hmac, init_vec)
         """
+        if initialize:
+            return {'plain_data': None, 'init_vec': None}
+
         data = self.read()
         encrypted_data = data['encrypted_data']
         provided_hmac = data['hmac']
@@ -391,30 +397,24 @@ class Encrypter:
 
         return {'plain_data': self.decrypt(key, init_vec, encrypted_data), 'init_vec': init_vec}
 
-    def run(self, recover: bool = False) -> None:
+    def run(self, initialize: bool = False) -> None:
         """
         Run the encrypter.
 
         Args:
-            recover (bool): True to use default template file as input
+            initialize (bool): True to use default template file as input
         """
-        # init required vars
-        plain_data = None
-
         # Read key
         key = self.read_key()
 
-        if recover:
-            shutil.copy(self.TEMPLATE_FILE, self._tmp_file)
+        encrypted_contents = self._read_encrypted_file(key, initialize)
+        plain_data = encrypted_contents['plain_data']
+        init_vec = encrypted_contents['init_vec']
 
-        else:
-            encrypted_contents = self._read_encrypted_file(key)
-            plain_data = encrypted_contents['plain_data']
-            init_vec = encrypted_contents['init_vec']
-
-        new_plain_data = self.edit(plain_data, recover)
+        new_plain_data = self.edit(plain_data, initialize)
 
         if new_plain_data is None and plain_data is None:
+            print('Nothing to do. Bye.')
             return
 
         self._write_if_changed(key, init_vec, new_plain_data, plain_data)
@@ -432,7 +432,7 @@ def main() -> None:
     )
 
     parser.add_argument(
-        '--recover',
+        '--initialize',
         action='store_true',
         default=False,
         help='to use the default unencrypted file as start'
@@ -451,7 +451,7 @@ def main() -> None:
     logging.basicConfig(level=level)
 
     tool = Encrypter(args.debug > 3)
-    tool.run(args.recover)
+    tool.run(args.initialize)
 
 
 if __name__ == '__main__':
