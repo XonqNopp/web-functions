@@ -26,12 +26,6 @@ class Encrypter:
     IV_LENGTH = 16
     SHA_LENGTH = hashlib.sha256().digest_size
 
-    TMP_DIR = Path('/tmp')
-    TMP_FILE_BASENAME = 'iniloc'
-    TEMPLATE_FILE = Path('functions', 'templates', 'init_local.php')
-
-    ENCODING = 'utf-8'
-
     def __init__(self, dryrun: bool = False) -> None:
         self._dryrun = dryrun
         self._logger = logging.getLogger(self.__class__.__name__)
@@ -39,8 +33,9 @@ class Encrypter:
         if self._dryrun:
             self._logger.error('WARNING: dry run - no file writing')
 
-        self._tmp_file = self.TMP_DIR / (
-            self.TMP_FILE_BASENAME + datetime.strftime(datetime.utcnow(), '%Y%m%d%H%M%S%f') + '.php'
+        self._tmp_file = Path(
+            '/tmp',
+            'iniloc' + datetime.strftime(datetime.utcnow(), '%Y%m%d%H%M%S%f') + '.php'
         )
 
         self._logger.warning(f'TMP: {self._tmp_file}')
@@ -63,21 +58,17 @@ class Encrypter:
         return result
 
     @staticmethod
-    def compute_hmac(data: str | bytes, key: bytes) -> bytes:
+    def compute_hmac(data: bytes, key: bytes) -> bytes:
         """
         Compute HMAC-SHA256 of data.
 
         Args:
-            data (str, bytes): data to hash
+            data (bytes): data to hash
             key (bytes): key to use for HMAC
 
         Returns:
             bytes: hmac
         """
-        # TODO
-        if isinstance(data, str):
-            data = data.encode()
-
         return hmac.new(key, msg=data, digestmod=hashlib.sha256).digest()
 
     def read_key(self) -> bytes:
@@ -109,23 +100,21 @@ class Encrypter:
         Returns:
             bytes: Output of openssl command
         """
-        key_str = self.str2hex(key.decode())
+        encrypt_way_flag = '-e' if encrypt else '-d'
 
-        init_vec_str = self.str2hex(init_vec.decode())
+        command = [
+            'openssl',
+            'enc',
+            '-aes-256-cbc',
+            encrypt_way_flag,
+            '-iv',
+            self.str2hex(init_vec.decode()),
+        ]
 
-        command = ['openssl', 'enc', '-aes-256-cbc']
-
-        if encrypt:
-            command.append('-e')
-
-        else:
-            command.append('-d')
-
-        command.extend(['-iv', init_vec_str])
-
+        # Log command before adding key
         self._logger.info(' '.join(command))
 
-        command.extend(['-K', key_str])
+        command.extend(['-K', self.str2hex(key.decode())])
 
         cmd = subprocess.run(
             command,
@@ -178,10 +167,16 @@ class Encrypter:
         """
         data = base64.decodebytes(self.ENCRYPTED_FILE.read_text().strip().encode())
 
-        init_vec = data[:self.IV_LENGTH]
-        the_hmac = data[self.IV_LENGTH:self.IV_LENGTH + self.SHA_LENGTH]
-        real_data = data[self.IV_LENGTH + self.SHA_LENGTH:]
-        return {'hmac': the_hmac, 'init_vec': init_vec, 'encrypted_data': real_data}
+        start = 0
+        init_vec = data[start:start + self.IV_LENGTH]
+
+        start = self.IV_LENGTH
+        the_hmac = data[start:start + self.SHA_LENGTH]
+
+        start += self.SHA_LENGTH
+        encrypted_data = data[start:]
+
+        return {'hmac': the_hmac, 'init_vec': init_vec, 'encrypted_data': encrypted_data}
 
     def write(self, init_vec: bytes, the_hmac: bytes, data: bytes) -> None:
         """
@@ -214,6 +209,8 @@ class Encrypter:
         self._logger.info(f'edit(plain_data, {initialize=})')
 
         if initialize:
+            TEMPLATE_FILE = Path('functions', 'templates', 'init_local.php')
+
             shutil.copy(self.TEMPLATE_FILE, self._tmp_file)
 
         else:
@@ -351,11 +348,12 @@ class Encrypter:
             plain_data (bytes)
         """
         do_you_want_to_write = 'detected. Do you want to write the encrypted file'
+        not_writing = 'Not writing. Bye.'
 
         if new_plain_data is None:
             confirm_write_file = input(f'No modification {do_you_want_to_write} anyway? [y/N]  ')
             if confirm_write_file == '' or confirm_write_file.lower()[0] != 'y':
-                print('Not writing. Bye.')
+                print(not_writing)
                 return
 
             if plain_data is None:
@@ -366,7 +364,7 @@ class Encrypter:
 
         confirm_write_file = input(f'Modifications {do_you_want_to_write}? [Y/n]  ')
         if confirm_write_file != '' and confirm_write_file.lower()[0] != 'y':
-            print('Not writing. Bye.')
+            print(not_writing)
             return
 
         self._write(key, init_vec, new_plain_data)
@@ -387,12 +385,11 @@ class Encrypter:
 
         data = self.read()
         encrypted_data = data['encrypted_data']
-        provided_hmac = data['hmac']
         init_vec = data['init_vec']
 
         # check hmac
         check_hmac = self.compute_hmac(encrypted_data, key)
-        if provided_hmac != check_hmac:
+        if data['hmac'] != check_hmac:
             raise ValueError('HMAC comparison failed')
 
         return {'plain_data': self.decrypt(key, init_vec, encrypted_data), 'init_vec': init_vec}
@@ -409,7 +406,6 @@ class Encrypter:
 
         encrypted_contents = self._read_encrypted_file(key, initialize)
         plain_data = encrypted_contents['plain_data']
-        init_vec = encrypted_contents['init_vec']
 
         new_plain_data = self.edit(plain_data, initialize)
 
@@ -417,7 +413,7 @@ class Encrypter:
             print('Nothing to do. Bye.')
             return
 
-        self._write_if_changed(key, init_vec, new_plain_data, plain_data)
+        self._write_if_changed(key, encrypted_contents['init_vec'], new_plain_data, plain_data)
 
 
 def main() -> None:
