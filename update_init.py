@@ -209,12 +209,10 @@ class Encrypter:
         self._logger.info(f'edit(plain_data, {initialize=})')
 
         if initialize:
-            TEMPLATE_FILE = Path('functions', 'templates', 'init_local.php')
-
-            shutil.copy(self.TEMPLATE_FILE, self._tmp_file)
+            template_file = Path('functions', 'templates', 'init_local.php')
+            shutil.copy(template_file, self._tmp_file)
 
         else:
-            # write to tmp file
             if plain_data is None:
                 raise ValueError('plain data can be None only for initialize mode')
 
@@ -223,20 +221,14 @@ class Encrypter:
         # Open editor for user to do the changes
         subprocess.run(['vim', '-n', '-u', 'NONE', str(self._tmp_file)], check=True)
 
-        # read back from tmp file and encode to bytes
         new_plain_str = self._tmp_file.read_text()
-
-        # delete tmp file
         self._tmp_file.unlink()
 
-        # Check if PHP tags present
         if new_plain_str.startswith('<?php'):
             raise ValueError('You forgot to remove the PHP tags kept for editor formatting, abort')
 
-        # Convert to bytes
         new_plain_bytes = new_plain_str.encode()
 
-        # check if modifications
         if new_plain_bytes == plain_data:
             return None
 
@@ -253,15 +245,17 @@ class Encrypter:
         """
         password1 = getpass.getpass('  Enter the new password: ')
         password2 = getpass.getpass('Confirm the new password: ')
+
         if password1 != password2:
+            print('Password mismatch, abort')
             return None
 
         if self._dryrun:
             print(f'Skipping writing new password: {password1}')
             return password1.encode()
 
-        # Write new password to file
         self.KEY_FILE.write_text(password1)
+        print('WARNING: do not forget to copy the new key file on the remote server.')
 
         return password1.encode()
 
@@ -287,7 +281,6 @@ class Encrypter:
             init_vec_str = init_vec_str[:self.IV_LENGTH]
             self._logger.warning(f'{init_vec_str=} ({old_init_vec=!r})')
 
-            # Check different from previous one
             init_vec = init_vec_str.encode()
             if init_vec != old_init_vec:
                 return init_vec
@@ -325,13 +318,13 @@ class Encrypter:
             new_plain_data (bytes)
         """
         # new_key = self._change_key()  # too dangerous to change this way
+
         new_key = None
         if new_key is not None:
             key = new_key
 
         new_iv = self.ask_init_vec(init_vec)
 
-        # encrypt
         encrypted_data = self.encrypt(key, new_iv, new_plain_data)
         the_hmac = self.compute_hmac(encrypted_data, key)
         self.write(new_iv, the_hmac, encrypted_data)
@@ -387,7 +380,6 @@ class Encrypter:
         encrypted_data = data['encrypted_data']
         init_vec = data['init_vec']
 
-        # check hmac
         check_hmac = self.compute_hmac(encrypted_data, key)
         if data['hmac'] != check_hmac:
             raise ValueError('HMAC comparison failed')
@@ -401,7 +393,6 @@ class Encrypter:
         Args:
             initialize (bool): True to use default template file as input
         """
-        # Read key
         key = self.read_key()
 
         encrypted_contents = self._read_encrypted_file(key, initialize)
