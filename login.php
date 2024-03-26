@@ -1,9 +1,9 @@
 <?php
-require("helper.php");
-require("body.php");
-require("cookie.php");
-require("crypto.php");
-require("html.php");
+require_once("helper.php");
+require_once("body.php");
+require_once("cookie.php");
+require_once("crypto.php");
+require_once("html.php");
 
 
 $kGuest = 0;
@@ -280,5 +280,5 @@ class LoginHelper extends MyHelper {
 
 
 // singleton
-$theLoginHelper = LoginHelper();
+$theLoginHelper = new LoginHelper();
 ?>

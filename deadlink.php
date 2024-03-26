@@ -1,5 +1,5 @@
 <?php
-require("page_helper.php");
+require_once("page_helper.php");
 $page = new PhPage("..");
 //$page->logLevelUp(6);
 $page->setTitle("Dead Link");

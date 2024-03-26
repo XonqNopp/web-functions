@@ -1,10 +1,14 @@
 <?php
-require("helper.php");
-require("database.php");
-require("text.php");
+require_once("helper.php");
+require_once("database.php");
+require_once("text.php");
 
 
 class FileHelper extends MyHelper {
+	public function setup() {
+		// Empty method so we can still call
+	}
+	//
 		/**
 		 * embed file (PDF)
 		 *
@@ -208,5 +212,5 @@ class FileHelper extends MyHelper {
 
 
 // singleton
-$theFileHelper = FileHelper();
+$theFileHelper = new FileHelper();
 ?>

@@ -1,7 +1,7 @@
 <?php
-require("helper.php");
-require("crypto.php");
-require("server.php");
+require_once("helper.php");
+require_once("crypto.php");
+require_once("server.php");
 
 
 // login, language
@@ -49,5 +49,5 @@ class CookieHelper extends MyHelper {
 
 
 // singleton
-$theCookieHelper = CookieHelper();
+$theCookieHelper = new CookieHelper();
 ?>

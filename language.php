@@ -1,8 +1,8 @@
 <?php
-require("helper.php");
-require("body.php");
-require("cookie.php");
-require("translators.php");
+require_once("helper.php");
+require_once("body.php");
+require_once("cookie.php");
+require_once("translators.php");
 
 
 class LanguageHelper extends MyHelper {
@@ -251,5 +251,5 @@ class LanguageHelper extends MyHelper {
 
 
 // singleton
-$theLanguageHelper = LanguageHelper();
+$theLanguageHelper = new LanguageHelper();
 ?>

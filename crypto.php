@@ -1,5 +1,5 @@
 <?php
-require("helper.php");
+require_once("helper.php");
 
 
 class CryptoHelper extends MyHelper {
@@ -112,5 +112,5 @@ class CryptoHelper extends MyHelper {
 
 
 // singleton
-$theCryptoHelper = CryptoHelper();
+$theCryptoHelper = new CryptoHelper();
 ?>

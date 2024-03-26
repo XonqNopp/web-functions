@@ -1,8 +1,8 @@
 <?php
-require("helper.php");
-require("login.php");
-require("server.php");
-require("text.php");
+require_once("helper.php");
+require_once("login.php");
+require_once("server.php");
+require_once("text.php");
 use mysqli;
 use stdClass;
 
@@ -912,5 +912,5 @@ class DatabaseHelper extends MyHelper {
 
 
 // singleton
-$theDbHelper = DatabaseHelper();
+$theDbHelper = new DatabaseHelper();
 ?>

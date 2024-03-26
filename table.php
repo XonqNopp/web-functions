@@ -1,5 +1,5 @@
 <?php
-require("helper.php");
+require_once("helper.php");
 
 
 class TableHelper extends MyHelper {
@@ -9,6 +9,10 @@ class TableHelper extends MyHelper {
 
 	private $minWidth = 64;
 
+	public function setup() {
+		// Empty method so we can still call
+	}
+	//
 		public function setMinWidth($minWidth) {
 			$this->logger->trace("setMinWidth($minWidth)");
 
@@ -124,5 +128,5 @@ class TableHelper extends MyHelper {
 
 
 // singleton
-$theTableHelper = TableHelper();
+$theTableHelper = new TableHelper();
 ?>

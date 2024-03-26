@@ -1,5 +1,5 @@
 <?php
-require("photos_displaythumb.php");
+require_once("photos_displaythumb.php");
 $max = 100;
 if(isset($_GET["max"])) {
 	$max = $_GET["max"];

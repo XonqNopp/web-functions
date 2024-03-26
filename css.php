@@ -1,6 +1,6 @@
 <?php
-require("helper.php");
-require("body.php");
+require_once("helper.php");
+require_once("body.php");
 
 
 class CssHelper extends MyHelper {
@@ -131,5 +131,5 @@ class CssHelper extends MyHelper {
 
 
 // singleton
-$theCssHelper = CssHelper();
+$theCssHelper = new CssHelper();
 ?>

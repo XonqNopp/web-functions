@@ -320,5 +320,5 @@ class Logger {
 
 
 // singleton
-$theLogger = Logger();
+$theLogger = new Logger();
 ?>

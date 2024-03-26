@@ -1,8 +1,12 @@
 <?php
-require("helper.php");
+require_once("helper.php");
 
 
 class UtilsHelper extends MyHelper {
+	public function setup() {
+		// Empty method so we can still call
+	}
+	//
 		public function arraySequential2Associative($seqArray) {
 			$assocArray = array();
 
@@ -91,5 +95,5 @@ class UtilsHelper extends MyHelper {
 
 
 // singleton
-$theUtilsHelper = UtilsHelper();
+$theUtilsHelper = new UtilsHelper();
 ?>

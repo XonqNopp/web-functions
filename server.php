@@ -1,5 +1,5 @@
 <?php
-require("helper.php");
+require_once("helper.php");
 
 
 class ServerHelper extends MyHelper {
@@ -31,5 +31,5 @@ class ServerHelper extends MyHelper {
 
 
 // singleton
-$theServerHelper = ServerHelper();
+$theServerHelper = new ServerHelper();
 ?>

@@ -1,5 +1,5 @@
 <?php
-require("helper.php");
+require_once("helper.php");
 
 
 class JsHelper extends MyHelper {
@@ -87,5 +87,5 @@ class JsHelper extends MyHelper {
 
 
 // singleton
-$theJsHelper = JsHelper();
+$theJsHelper = new JsHelper();
 ?>

@@ -1,10 +1,10 @@
 <?php
-require("helper.php");
-require("body.php");
-require("database.php");
-require("language.php");
-require("text.php");
-require("time.php");
+require_once("helper.php");
+require_once("body.php");
+require_once("database.php");
+require_once("language.php");
+require_once("text.php");
+require_once("time.php");
 
 
 class FormHelper extends MyHelper {
@@ -126,5 +126,5 @@ class FormHelper extends MyHelper {
 
 
 // singleton
-$theFormHelper = FormHelper();
+$theFormHelper = new FormHelper();
 ?>

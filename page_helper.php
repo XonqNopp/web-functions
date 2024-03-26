@@ -2,28 +2,28 @@
 session_start();  // This must always be the first line executed
 session_regenerate_id();
 
-//error_reporting(E_ALL);
-//ini_set("display_errors", "1");
-//ini_set("display_startup_errors", "1");
+error_reporting(E_ALL);
+ini_set("display_errors", "1");
+ini_set("display_startup_errors", "1");
 
-require("helper.php");
+require_once("helper.php");
 
-require("body.php");
-require("cookie.php");
-require("crypto.php");
-require("css.php");
-require("database.php");
-require("file.php");
-require("form.php");
-require("html.php");
-require("js.php");
-require("language.php");
-require("login.php");
-require("server.php");
-require("table.php");
-require("text.php");
-require("time.php");
-require("utils.php");
+require_once("body.php");
+require_once("cookie.php");
+require_once("crypto.php");
+require_once("css.php");
+require_once("database.php");
+require_once("file.php");
+require_once("form.php");
+require_once("html.php");
+require_once("js.php");
+require_once("language.php");
+require_once("login.php");
+require_once("server.php");
+require_once("table.php");
+require_once("text.php");
+require_once("time.php");
+require_once("utils.php");
 
 
 /**

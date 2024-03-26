@@ -11,7 +11,7 @@
  * autocorrect=off
  * autocapitalize=words
  */
-require("logging.php");
+require_once("logging.php");
 use DateTime;
 
 

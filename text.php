@@ -1,10 +1,14 @@
 <?php
-require("helper.php");
+require_once("helper.php");
 
 
 class TextHelper extends MyHelper {
 	public $strLaTeX = "<span class=\"latex\">L<sup>a</sup>T<sub>e</sub>X</span>";
 
+	public function setup() {
+		// Empty method so we can still call
+	}
+	//
 		/**
 		 * get extension of filename
 		 *
@@ -54,5 +58,5 @@ class TextHelper extends MyHelper {
 
 
 // singleton
-$theTextHelper = TextHelper();
+$theTextHelper = new TextHelper();
 ?>

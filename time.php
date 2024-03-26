@@ -1,6 +1,6 @@
 <?php
-require("helper.php");
-require("language.php");
+require_once("helper.php");
+require_once("language.php");
 use stdClass;
 
 
@@ -13,6 +13,10 @@ class TimeHelper extends MyHelper {
 	private $months = array();
 	private $monthLanguage = "";
 
+	public function setup() {
+		// Empty method so we can still call
+	}
+	//
 		/**
 		 * Init months: we need to redo it if language changes
 		 *
@@ -162,5 +166,5 @@ class TimeHelper extends MyHelper {
 
 
 // singleton
-$theTimeHelper = TimeHelper();
+$theTimeHelper = new TimeHelper();
 ?>

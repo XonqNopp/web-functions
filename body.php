@@ -1,10 +1,14 @@
 <?php
-require("helper.php");
+require_once("helper.php");
 
 
 class BodyHelper extends MyHelper {
 	public $targetBlank = "target=\"_blank\"";
 
+	public function setup() {
+		// Empty method so we can still call
+	}
+	//
 		private function upIndex($path) {
 			if(!preg_match("/\.\.(\/\.\.)*/", $path)) {
 				return $path;
@@ -206,5 +210,5 @@ class BodyHelper extends MyHelper {
 
 
 // singleton
-$theBodyHelper = BodyHelper();
+$theBodyHelper = new BodyHelper();
 ?>

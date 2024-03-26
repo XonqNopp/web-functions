@@ -144,5 +144,5 @@ class TranslatorCollection {
 
 
 // singleton
-$theTranslators = TranslatorCollection();
+$theTranslators = new TranslatorCollection();
 ?>

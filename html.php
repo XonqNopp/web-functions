@@ -1,10 +1,10 @@
 <?php
-require("helper.php");
-require("body.php");
-require("css.php");
-require("database.php");
-require("file.php");
-require("js.php");
+require_once("helper.php");
+require_once("body.php");
+require_once("css.php");
+require_once("database.php");
+require_once("file.php");
+require_once("js.php");
 
 
 class HtmlHelper extends MyHelper {
@@ -18,6 +18,10 @@ class HtmlHelper extends MyHelper {
 	private $iOsPic      = "";  // set iOS home screen icon (min 57x57)
 	private $iOsStartup  = "";
 	private $title       = "";
+
+	public function setup() {
+		// Empty method so we can still call
+	}
 
 	public function teardown() {
 		$this->finishHim();
@@ -354,5 +358,5 @@ class HtmlHelper extends MyHelper {
 
 
 // singleton
-$theHtmlHelper = HtmlHelper();
+$theHtmlHelper = new HtmlHelper();
 ?>
