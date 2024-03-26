@@ -68,6 +68,8 @@
 			"next" => "prochaine",
 		);
 	}
+
+          use FrenchTranslator;
 //
 
 	/**
@@ -83,6 +85,8 @@
 			"erase" => "far",
 		);
 	}
+
+          use WolofTranslator;
 //
 
 	/**
@@ -98,6 +102,8 @@
 			"erase" => "djan djan",
 		);
 	}
+
+          use MandinkaTranslator;
 //
 
 class TranslatorCollection {
@@ -105,9 +111,9 @@ class TranslatorCollection {
 	private $translators = array();
 
 	public function __construct() {
-		$this->translators["french"] = FrenchTranslator();
-		$this->translators["wolof"] = WolofTranslator();
-		$this->translators["mandinka"] = MandinkaTranslator();
+		$this->translators["french"] = new FrenchTranslator();
+		$this->translators["wolof"] = new WolofTranslator();
+		$this->translators["mandinka"] = new MandinkaTranslator();
 	}
 
 	public function get($language) {

@@ -105,7 +105,7 @@ class DatabaseText {
 }
 
 
-$theDatabaseText = DatabaseText();
+$theDatabaseText = new DatabaseText();
 
 
 	// DB data
