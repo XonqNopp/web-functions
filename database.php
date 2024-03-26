@@ -351,9 +351,9 @@ class DatabaseHelper extends MyHelper {
 
 			global $theServerHelper;
 			if($theServerHelper->isLocalhost()) {
-				$server = "localhost";
-				$username = "phpmyadmin";
-				$password = "root";
+				$server = "127.0.0.1";
+				$username = "localadmin";
+				$password = "localpassword";
 			}
 
 			$mysqli = new mysqli($server, $username, $password, $this->dbName);
