@@ -2,6 +2,8 @@
 
 This repo contains all the common stuff I use for the websites I develop.
 
+To simplify the require statements, all sub-helper files are suffixed with `_helper`.
+
 
 ## HTML5
 
