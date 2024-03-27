@@ -33,7 +33,7 @@ class CssHelper extends MyHelper {
         public function getValid() {
             $this->logger->trace("getValid: bValid={$this->bValid}");
 
-            if(!$this->cssHelper->bValid) {
+            if(!$this->bValid) {
                 return "";
             }
 
@@ -104,7 +104,7 @@ class CssHelper extends MyHelper {
             $this->logger->trace("lines()");
 
             // Add own CSS to stack
-            $this->push($this->shortName);
+            $this->push($this->shortName);  // TODO fix shortName
 
             $back = "";
 

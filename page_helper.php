@@ -153,25 +153,34 @@ class PhPage extends MyHelper {
 
     // desctruct
     public function __destruct() {
-        $this->bodyHelper->teardown();
-        $this->cookieHelper->teardown();
-        $this->cryptoHelper->teardown();
-        $this->cssHelper->teardown();
-        $this->dbHelper->teardown();
-        $this->dbText->teardown();
-        $this->fileHelper->teardown();
-        $this->formHelper->teardown();
-        $this->jsHelper->teardown();
-        $this->languageHelper->teardown();
-        $this->loginHelper->teardown();
-        $this->serverHelper->teardown();
-        $this->tableHelper->teardown();
-        $this->textHelper->teardown();
-        $this->timeHelper->teardown();
-        $this->utilsHelper->teardown();
+        $this->teardownHelper($this->bodyHelper);
+        $this->teardownHelper($this->cookieHelper);
+        $this->teardownHelper($this->cryptoHelper);
+        $this->teardownHelper($this->cssHelper);
+        $this->teardownHelper($this->dbHelper);
+        // $this->teardownHelper($this->dbText);  // not a helper, no teardown
+        $this->teardownHelper($this->fileHelper);
+        $this->teardownHelper($this->formHelper);
+        $this->teardownHelper($this->jsHelper);
+        $this->teardownHelper($this->languageHelper);
+        $this->teardownHelper($this->loginHelper);
+        $this->teardownHelper($this->serverHelper);
+        $this->teardownHelper($this->tableHelper);
+        $this->teardownHelper($this->textHelper);
+        $this->teardownHelper($this->timeHelper);
+        $this->teardownHelper($this->utilsHelper);
 
         // HTML last
-        $this->htmlHelper->teardown();
+        $this->teardownHelper($this->htmlHelper);
+    }
+
+    private function teardownHelper($helper) {
+        if($helper === NULL) {
+            // It can happen that we abort and some helpers are not setup yet.
+            return;
+        }
+
+        $helper->teardown();
     }
 }
 

@@ -15,7 +15,7 @@ class ServerHelper extends MyHelper {
         $local = preg_match("/localhost$/", $_SERVER["SERVER_NAME"]);  // match end so we can have multiple localhost
         $lan   = preg_match("/^192\.168\./", $_SERVER["SERVER_NAME"]);
         $this->bLocalhost = ($local || $lan);
-        $this->logger->trace("isLocalhost = {$this->isLocalhost}");
+        $this->logger->trace("isLocalhost = {$this->isLocalhost()}");
 
         if($this->isLocalhost()) {
             error_reporting(E_ALL);

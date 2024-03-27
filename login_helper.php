@@ -64,7 +64,7 @@ class LoginHelper extends MyHelper {
             }
 
             // Update admin flag for logger
-            $this->logger->userIsAdmin($this->userIsAdmin);
+            $this->logger->userIsAdmin($this->userIsAdmin());
         }
 
         public function userIsGuest() {

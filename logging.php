@@ -218,7 +218,7 @@ class Logger {
         }
     //
         // output the log stack
-        private function logStack($stackLevel=NULL) {
+        public function logStack($stackLevel=NULL) {
             global $kFatal;
             if($stackLevel === NULL) {
                 $stackLevel = $kFatal;

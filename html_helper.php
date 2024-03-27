@@ -3,8 +3,8 @@ require_once("helper.php");
 require_once("body_helper.php");
 require_once("css_helper.php");
 require_once("database_helper.php");
-require_once("file_helper.php");
 require_once("js_helper.php");
+require_once("text_helper.php");
 
 
 class HtmlHelper extends MyHelper {
@@ -123,8 +123,8 @@ class HtmlHelper extends MyHelper {
                 $this->logger->trace("favicon pic not empty");
                 $faviconPic = $this->faviconPic;
 
-                global $theFileHelper;
-                $faviconExt = $theFileHelper->getExt($faviconPic, false);
+                global $theTextHelper;
+                $faviconExt = $theTextHelper->getExt($faviconPic, false);
 
                 $back .= "<link rel=\"icon\" type=\"image/$faviconExt\" href=\"$faviconPic\" />\n";
             }
@@ -219,10 +219,12 @@ class HtmlHelper extends MyHelper {
             $back .= $this->favicon();
             $this->logger->trace("makeHead favicon OK");
 
-            $back .= $this->cssHelper->lines();
+            global $theCssHelper;
+            $back .= $theCssHelper->lines();
             $this->logger->trace("makeHead CSS OK");
 
-            $back .= $this->jsHelper->lines();
+            global $theJsHelper;
+            $back .= $theJsHelper->lines();
             $this->logger->trace("makeHead javascript OK");
 
             $back .= $this->titleline();
@@ -325,6 +327,7 @@ class HtmlHelper extends MyHelper {
          */
         public function headerLocation($location="index.php") {
             $this->logger->trace("headerLocation($location)");
+            return;  // TODO I WAS HERE
 
             if($location == "") {
                 return;
