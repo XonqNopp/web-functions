@@ -13,7 +13,7 @@ class CookieHelper extends MyHelper {
     }
 
         // Choose cookie path (because localhost sucks)
-    // TODO confirm with multiple localhost???
+        // TODO confirm with multiple localhost???
         public function recipe() {
             $this->logger->trace("recipe()");
 
@@ -23,6 +23,7 @@ class CookieHelper extends MyHelper {
             }
 
             // Set it to root+1 dir
+            $this->logger->info("recipe filePath=$this->filePath");
             $back = preg_replace("/^(\/[^\/]+)\/.*$/", '\1', $this->filePath);
             $this->logger->info("recipe back=$back");
             return $back;
@@ -38,7 +39,7 @@ class CookieHelper extends MyHelper {
                 $expire = time() + 3600 * 24 * 300;  // 300 days
             }
 
-            setcookie($cookie, $value, $expire, $this->recipe());
+            setcookie($cookie, $value, $expire, "/");
         }
 
         // Invalidate

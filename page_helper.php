@@ -179,6 +179,11 @@ class PhPage extends MyHelper {
 
         $helper->teardown();
     }
+
+    // change log level
+    public function logLevelUp($level) {
+        $this->logger->levelUp($level);
+    }
 }
 
 

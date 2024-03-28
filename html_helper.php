@@ -327,7 +327,6 @@ class HtmlHelper extends MyHelper {
          */
         public function headerLocation($location="index.php") {
             $this->logger->trace("headerLocation($location)");
-            return;  // TODO I WAS HERE
 
             if($location == "") {
                 return;

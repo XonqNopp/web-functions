@@ -19,6 +19,7 @@ class Logger {
     private $oldLevel;
     private $oldText;
     private $oldBefore;
+    private $oldErrors = 0;
 
     public $htmlOpen;
     public $inBody;

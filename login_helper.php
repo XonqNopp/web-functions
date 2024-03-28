@@ -142,7 +142,7 @@ class LoginHelper extends MyHelper {
         }
     //
         /**
-         * Write cookie
+         * Bake cookie (write)
          *
          * @SuppressWarnings(PHPMD.Superglobals)
          */
@@ -157,27 +157,25 @@ class LoginHelper extends MyHelper {
         }
     //
         /**
-         * check login cookie
+         * Eat login cookie (check)
          *
          * @SuppressWarnings(PHPMD.Superglobals)
          */
         public function eatCookie($redirect="index.php") {
-            $this->logger->trace("cookie($redirect)");
+            $this->logger->trace("eatCookie($redirect)");
 
             if(!$this->userIsGuest() || !isset($_COOKIE[$this->cookie])) {
                 return;
             }
 
-            global $theCryptoHelper;
-
-            $this->logger->debug("loginCookie user is guest and found cookie");
+            $this->logger->debug("eatCookie user is guest and found cookie");
             $cookietxt = $_COOKIE[$this->cookie];
-            $this->logger->debug("loginCookie fortune is $cookietxt");
+            $this->logger->debug("eatCookie fortune is $cookietxt");
 
             $sugar = $this->sex->sugar;
 
-            $bBakeNburn = false;
-
+            // TODO I WAS HERE
+            global $theCryptoHelper;
             $value = NULL;
             if($theCryptoHelper->hache($this->sex->LoggedValue . $sugar, $cookietxt)) {
                 $value = $this->sex->LoggedValue;
@@ -194,11 +192,7 @@ class LoginHelper extends MyHelper {
                 $_SESSION[$this->sex->session] = $value;
                 $this->setUserLevel();
 
-                $bBakeNburn = true;
-            }
-
-            if($bBakeNburn) {
-                $this->logger->debug("loginCookie match found");
+                $this->logger->debug("eatCookie match found");
                 $this->bakeCookie();
 
                 if($redirect == "") {
@@ -210,7 +204,7 @@ class LoginHelper extends MyHelper {
                 return;
             }
 
-            $this->logger->debug("loginCookie not matching, invaliding...");
+            $this->logger->debug("eatCookie not matching, invaliding...");
             global $theCookieHelper;
             $theCookieHelper->burn($this->cookie);
         }
