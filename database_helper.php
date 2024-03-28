@@ -622,7 +622,7 @@ class DatabaseHelper extends MyHelper {
         // get a random entry from a given DB table
         public function randomEntry($table) {
             $this->logger->trace("randomEntry($table)");
-            return $this->queryManage("SELECT * from `$table` ORDER BY RAND LIMIT 1");
+            return $this->queryManage("SELECT * from `$table` ORDER BY RAND() LIMIT 1");
         }
     //
         private function getDateEvent($query, $order="ASC") {

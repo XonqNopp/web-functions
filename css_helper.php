@@ -99,12 +99,17 @@ class CssHelper extends MyHelper {
             $this->dirUp("bridge", $dirUp);
         }
     //
-        // CSS lines
+        /**
+         * SS lines
+         *
+         * @SuppressWarnings(PHPMD.Superglobals)
+         */
         public function lines() {
             $this->logger->trace("lines()");
 
             // Add own CSS to stack
-            $this->push($this->shortName);  // TODO fix shortName
+            $shortName = preg_replace("/\.php$/", "", basename($_SERVER["SCRIPT_NAME"]));
+            $this->push($shortName);
 
             $back = "";
 

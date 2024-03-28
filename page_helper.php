@@ -2,10 +2,6 @@
 session_start();  // This must always be the first line executed
 session_regenerate_id();
 
-error_reporting(E_ALL);
-ini_set("display_errors", "1");
-ini_set("display_startup_errors", "1");
-
 require_once("helper.php");
 
 require_once("body_helper.php");
@@ -65,7 +61,6 @@ class PhPage extends MyHelper {
         // set file name and path
         $filename = basename($_SERVER["SCRIPT_NAME"]);
         $filePath = dirname($_SERVER["SCRIPT_NAME"]);
-        //$shortName = preg_replace("/\.php$/", "", $filename);
 
             // Process init vars before setting up helpers (need to setup crypto helper)
             global $theCryptoHelper;
@@ -84,6 +79,12 @@ class PhPage extends MyHelper {
             $this->cookieHelper->setup($filePath);
         //
             // helpers (singletons so they can be used inside each other)
+            // server helper enables debug on localhost, place it first
+            global $theServerHelper;
+            $this->serverHelper = $theServerHelper;
+            $this->serverHelper->setup();
+
+            // alphabetical from here
             global $theBodyHelper;
             $this->bodyHelper = $theBodyHelper;
             $this->bodyHelper->setup();
@@ -129,10 +130,6 @@ class PhPage extends MyHelper {
             global $theLoginHelper;
             $this->loginHelper = $theLoginHelper;
             $this->loginHelper->setup($initLocal->sex, $filename);
-
-            global $theServerHelper;
-            $this->serverHelper = $theServerHelper;
-            $this->serverHelper->setup();
 
             global $theTableHelper;
             $this->tableHelper = $theTableHelper;
