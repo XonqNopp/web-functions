@@ -10,10 +10,10 @@ function CheckField(event, boxid, fieldid) {
 
 
 
-function boxcheck(event, fieldid, select = false)
+function boxcheck(event, fieldid, bSelect=false)
 {
 	var keys;
-	if(select) {
+	if(bSelect) {
 		keys = get_forbidden_keys_select();
 	} else {
 		keys = get_forbidden_keys();
