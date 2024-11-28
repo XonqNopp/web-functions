@@ -46,10 +46,15 @@ class CookieHelper extends MyHelper {
             }
 
             $result = $_COOKIE[$cookie];
-            list($value, $mac) = explode($this->separator, $result, 2);
+            $contents = explode($this->separator, $result, 2);
+            $value = $contents[0];
+            $mac = NULL;
+            if(count($contents) > 1) {
+                $mac = $contents[1];
+            }
 
             global $theBatman;
-            if(!$theBatman->hache($value, $mac)) {
+            if($mac !== NULL && !$theBatman->hache($value, $mac)) {
                 $this->logger->warning("Corrupted cookie: $value");
                 return NULL;
             }
