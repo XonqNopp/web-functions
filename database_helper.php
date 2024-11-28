@@ -6,8 +6,6 @@ require_once("language_helper.php");
 require_once("login_helper.php");
 require_once("server_helper.php");
 
-use mysqli;
-
 
 // To handle DB fields from user input, we have to take care of 3 different types:
 // * user input
