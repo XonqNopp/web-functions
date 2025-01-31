@@ -8,6 +8,21 @@ $kDebug = 5;
 $kTrace = 6;
 
 
+$logLevel = $kError;  // default
+
+$oldLevel = array();
+$oldText = array();
+$oldBefore = array();
+
+$oldErrors = 0;
+
+$htmlOpen = false;
+$inBody = false;
+$isUserAdmin = false;
+
+$fromGet = NULL;
+
+
 /**
  * Logger with all functionalities.
  *
@@ -15,38 +30,31 @@ $kTrace = 6;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class Logger {
-    private $level;
-
-    private $oldLevel;
-    private $oldText;
-    private $oldBefore;
-    private $oldErrors = 0;
-
-    public $htmlOpen;
-    public $inBody;
+    private $attachedClass;
 
     public $comChar = "#";
     public $blockChar = "*";
 
-    private $isUserAdmin = false;
-    private $fromGet = NULL;
-
-        public function __construct() {
-            global $kError;
-
-            $this->level = $kError;  // default
-
-            $this->oldLevel = array();
-            $this->oldText = array();
-            $this->oldBefore = array();
-
-            $this->htmlOpen = false;
-            $this->inBody = false;
+        public function __construct($class=NULL) {
+            $this->attachedClass = $class;
+        }
+    //
+        // Open HTML
+        public function openHtml() {
+            global $htmlOpen;
+            $htmlOpen = true;
+        }
+    //
+        // Open body
+        public function autopsy() {
+            global $inBody;
+            $inBody = true;
         }
     //
         // set admin
         public function userIsAdmin($admin) {
-            $this->isUserAdmin = $admin;
+            global $isUserAdmin;
+            $isUserAdmin = $admin;
         }
     //
         // HTML comment
@@ -66,21 +74,22 @@ class Logger {
             return $string;
         }
     //
-        // push log message to stack
-        private function pushToStack($level, $text, $before, $push=NULL) {
-            if($push === NULL) {
-                $push = true;
-            }
-
+        /**
+         * push log message to stack
+         *
+         * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+         */
+        private function pushToStack($level, $text, $before, $push=true) {
             if(!$push) {
-                return -1;
+                return;
             }
 
-            $this->oldLevel[]  = $level;
-            $this->oldText[]   = $text;
-            $this->oldBefore[] = $before;
-
-            return -1;
+            global $oldLevel;
+            global $oldText;
+            global $oldBefore;
+            $oldLevel[]  = $level;
+            $oldText[]   = $text;
+            $oldBefore[] = $before;
         }
     //
         private function echoDiv($text, $class) {
@@ -90,40 +99,51 @@ class Logger {
         /**
          * log message (all kind)
          *
+         * Args:
+         *     level (int): level at which to log the message
+         *     text (string): message to log
+         *     before (string): text to prepend to message
+         *     push (bool): false to not push message to log stack
+         *
+         * Returns:
+         *     int: 1 if message is logged, -1 if pushed to stack
+         *
          * @SuppressWarnings(PHPMD.ExitExpression)
+         * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+         * @SuppressWarnings(PHPMD.CyclomaticComplexity)
          */
-        public function log($level, $text, $before="", $push=NULL) {
+        public function log($level, $text, $before="", $push=true) {
             global $kFatal;
             global $kError;
             global $kWarning;
+            global $logLevel;
+            global $htmlOpen;
+            global $inBody;
 
             if($level == $kFatal) {
                 $this->echoDiv($text, "error");
                 exit(1);  // this is a fatal error
             }
 
-            if($before == "") {
-                $before = "PHP class " . __CLASS__;
+            if($before == "" && $this->attachedClass !== NULL) {
+                $before = "PHP class {$this->attachedClass}";
             }
 
-            if($level > $this->level) {
-                return $this->pushToStack($level, $text, $before, $push);
-            }
-
-            if(!$this->htmlOpen) {
-                // HTML not open yet, cannot output HTML comments
-                return $this->pushToStack($level, $text, $before, $push);
-            }
-
-            if(!$this->inBody && $level <= $kWarning) {
+            if(
+                ($level > $logLevel)
+                || !$htmlOpen  // HTML not open yet, cannot output HTML comments
+                || (!$inBody && $level <= $kWarning)
                 // htmlOpen: HTML open but not yet in body, must check because cannot output <div> before <body>
                 // inBody: if body is open, we can echo whatever
-                return $this->pushToStack($level, $text, $before, $push);
+            ) {
+                $this->pushToStack($level, $text, $before, $push);
+                return -1;
             }
 
             if($level == $kError) {
                 $this->echoDiv($text, "error");
-                $this->oldErrors++;
+                global $oldErrors;
+                $oldErrors++;
                 return 1;
             }
 
@@ -133,7 +153,7 @@ class Logger {
             }
 
             echo $this->htmlCom("$before($level)::$text");
-            return 1;  // needed in logStack
+            return 1;
         }
     //
         // fatal (stops script)
@@ -185,6 +205,7 @@ class Logger {
             global $kFatal;
             global $kWarning;
             global $kTrace;
+            global $logLevel;
 
             if($level === NULL) {
                 // Default max log
@@ -193,7 +214,7 @@ class Logger {
 
             $this->trace("levelUp($level)");
 
-            $old = $this->level;
+            $old = $logLevel;
 
             if($level == $old) {
                 return $old;
@@ -203,18 +224,19 @@ class Logger {
                 return $old;
             }
 
-            if($level >= $kWarning && $this->isUserAdmin) {
+            global $isUserAdmin;
+            if($level >= $kWarning && $isUserAdmin) {
                 // Enable more PHP debug
                 error_reporting(E_ALL);
                 ini_set("display_errors", "1");
                 ini_set("display_startup_errors", "1");
             }
 
-            $this->level = $level;
+            $logLevel = $level;
 
             $this->logStack();
 
-            $this->trace("levelUp up! $this->level ->$level");
+            $this->trace("levelUp up! $logLevel -> $level");
 
             return $old;
         }
@@ -222,53 +244,58 @@ class Logger {
         // output the log stack
         public function logStack($stackLevel=NULL) {
             global $kFatal;
+            global $logLevel;
+
             if($stackLevel === NULL) {
                 $stackLevel = $kFatal;
             }
 
-            $this->trace("logStack($stackLevel) this={$this->level}");
+            $this->trace("logStack($stackLevel) logLevel={$logLevel}");
 
-            if($stackLevel < $this->level) {
-                $stackLevel = $this->level;
+            if($stackLevel < $logLevel) {
+                $stackLevel = $logLevel;
             }
 
             $this->debug("logStack level=$stackLevel");
-            $oldLevel = $this->level;
+            $previousLevel = $logLevel;
 
-            if($stackLevel > $oldLevel) {
-                $this->level = $stackLevel;
+            if($stackLevel > $previousLevel) {
+                $logLevel = $stackLevel;
             }
 
-            $this->debug("logStack oldLevel=$oldLevel");
+            $this->debug("logStack previousLevel=$previousLevel");
 
             // Set oldText array to last element
-            end($this->oldText);
+            global $oldText;
+            end($oldText);
 
-            $maxLogId = key($this->oldText);
+            $maxLogId = key($oldText);
             $this->debug("logStack maxLogId=$maxLogId");
 
+            global $oldLevel;
+            global $oldBefore;
             for($i = 0; $i < $maxLogId; $i++) {
-                if(!isset($this->oldLevel[$i])) {
+                if(!isset($oldLevel[$i])) {
                     continue;
                 }
 
-                $level = $this->oldLevel[$i];
+                $level = $oldLevel[$i];
 
                 if($level > $stackLevel) {
                     continue;
                 }
 
-                if($this->log($level, $this->oldText[$i], $this->oldBefore[$i], false) <= 0) {
+                if($this->log($level, $oldText[$i], $oldBefore[$i], false) <= 0) {
                     continue;
                 }
 
-                unset($this->oldLevel[$i]);
-                unset($this->oldText[$i]);
-                unset($this->oldBefore[$i]);
+                unset($oldLevel[$i]);
+                unset($oldText[$i]);
+                unset($oldBefore[$i]);
             }
 
-            if($oldLevel != $stackLevel) {
-                $this->level = $oldLevel;
+            if($previousLevel != $stackLevel) {
+                $logLevel = $previousLevel;
             }
 
             $this->trace("logStack end");
@@ -279,12 +306,13 @@ class Logger {
          *
          * @SuppressWarnings(PHPMD.Superglobals)
          */
-        public function setLogLevelFromGet($fromGet=NULL) {
-            if($fromGet !== NULL) {
-                $this->fromGet = $fromGet;
+        public function setLogLevelFromGet($newFromGet=NULL) {
+            global $fromGet;
+            if($newFromGet !== NULL) {
+                $fromGet = $newFromGet;
             }
 
-            if($this->fromGet === NULL) {
+            if($fromGet === NULL) {
                 // Not ready to comply
                 return;
             }
@@ -292,8 +320,8 @@ class Logger {
             global $kFatal;
             global $kTrace;
             for($iLevel = $kTrace; $iLevel > $kFatal; --$iLevel) {
-                $key = $this->fromGet->keys[$iLevel];
-                $value = $this->fromGet->values[$iLevel];
+                $key = $fromGet->keys[$iLevel];
+                $value = $fromGet->values[$iLevel];
                 if(isset($_GET[$key]) && $_GET[$key] == $value) {
                     $this->levelUp($iLevel);
                     return;
@@ -305,9 +333,11 @@ class Logger {
         public function countErrors() {
             global $kError;
 
-            $back = $this->oldErrors;
+            global $oldErrors;
+            $back = $oldErrors;
 
-            foreach($this->oldLevel as $v) {
+            global $oldLevel;
+            foreach($oldLevel as $v) {
                 if($v <= $kError) {
                     $back++;
                 }
@@ -318,6 +348,7 @@ class Logger {
 }
 
 
-// singleton
+// All classes in this repo inheriting from helper have their own instance.
+// We provide a singleton to be used by other classes (for instance form_fields.php).
 $theLogger = new Logger();
 ?>

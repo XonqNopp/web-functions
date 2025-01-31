@@ -84,7 +84,7 @@ class HtmlHelper extends MyHelper {
 
             $this->isOpened = true;
 
-            $this->logger->htmlOpen = true;
+            $this->logger->openHtml();
             $this->logger->logStack();// now that open==true
             $this->logger->trace("init() end");
         }
@@ -262,7 +262,7 @@ class HtmlHelper extends MyHelper {
             echo $back;
 
             $this->isHeadless = true;
-            $this->logger->inBody = true;
+            $this->logger->autopsy();
             $this->logger->logStack(1);// now that bHeadless==true
             $this->logger->trace("decapite end");
         }
