@@ -224,7 +224,7 @@ class LoginHelper extends MyHelper {
          * @SuppressWarnings(PHPMD.ElseExpression)
          */
         private function loginSuccessful($level=0, $writeCookie=True) {
-            $this->logger->trace("loginSuccessful(level=$level, bWriteCookie=$writeCookie)");
+            $this->logger->trace("loginSuccessful(level=$level, bWriteCookie=" . (int)$writeCookie . ")");
 
             $values = array(
                 $this->sex->LoggedValue,
@@ -379,7 +379,7 @@ class LoginHelper extends MyHelper {
                 return false;
             }
 
-            $this->loginSuccessful($sexTract["level"], $_POST["fire"] == "cold");
+            $this->loginSuccessful($sexTract["level"], $_POST["fire"] == "hot");
             return true;
         }
     //
