@@ -5,9 +5,13 @@ require_once("logging.php");
 class MyHelper {
     protected $logger;
 
+    /**
+     * Init
+     *
+     * @SuppressWarnings(PHPMD.MissingImport)
+     */
     public function __construct() {
-        global $theLogger;
-        $this->logger = $theLogger;
+        $this->logger = new Logger(get_class($this));
     }
 
     // Cannot define empty setup() here because args may differ and it is not allowed.
