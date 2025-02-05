@@ -216,7 +216,7 @@ class BodyHelper extends MyHelper {
         }
     //
         public function titleAnchorCountEnable() {
-            $this->titlaAnchorCount = true;
+            $this->titleAnchorCount = true;
         }
     //
         public function titleAnchorCountDisable() {
