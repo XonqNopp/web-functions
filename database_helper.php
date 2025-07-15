@@ -476,19 +476,19 @@ class DatabaseHelper extends MyHelper {
             $queryError = "";
             if($query) {
                 if($query->errno != "") {
-                    $queryError = "<br />[query] Error #{$query->errno}: {$query->error}.\n";
+                    $queryError = "<br>[query] Error #{$query->errno}: {$query->error}.\n";
                 }
             }
 
             $mysqliError = "";
             if($this->mysqli->errno != "") {
-                $mysqliError = "<br />[MySqli] Error #{$this->mysqli->errno} : {$this->mysqli->error}.\n";
+                $mysqliError = "<br>[MySqli] Error #{$this->mysqli->errno} : {$this->mysqli->error}.\n";
             }
             $adminerror .= "$queryError$mysqliError";
 
             global $theLoginHelper;
             if($theLoginHelper->userIsAdmin()) {
-                $errorprint .= "<br />\n$adminerror";
+                $errorprint .= "<br>\n$adminerror";
             }
 
             $this->logger->fatal($errorprint);

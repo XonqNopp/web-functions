@@ -268,7 +268,7 @@ class BodyHelper extends MyHelper {
                 $string .= " $moreArgs";
             }
 
-            $string .= " />\n";
+            $string .= ">\n";
             return $string;
         }
     //

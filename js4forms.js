@@ -16,33 +16,33 @@ function ConfirmCancel() {
 }
 
 // FieldAction
-// use: <input onwhatever="FieldAction()" />
+// use: <input onwhatever="FieldAction()">
 function FieldAction() {
 	document.forms[0].submit.disabled = false;
 }
 
 // FieldChanged
-// use: <input onchange="FieldChanged()" />
+// use: <input onchange="FieldChanged()">
 function FieldChanged() {
 	bu = true;
 	document.forms[0].submit.disabled = false;
 }
 
 // ResetForm
-// use: <input type="reset" onclick="ResetForm()" />
+// use: <input type="reset" onclick="ResetForm()">
 function ResetForm() {
 	bu = false;
 	document.forms[0].submit.disabled = true;
 }
 
 // SubmitForm
-// use: <input type="submit" value="submit" onclick="SubmitForm()" />
+// use: <input type="submit" value="submit" onclick="SubmitForm()">
 function SubmitForm() {
 	bu = false;
 }
 
 // ConfirmErase
-// use: <input type="submit" value="erase" onclick="return ConfirmErase(...)" />
+// use: <input type="submit" value="erase" onclick="return ConfirmErase(...)">
 function ConfirmErase(content, bEnglish=true) {
 	var q = "Are you sure you want to delete ";
 	if(!bEnglish) {

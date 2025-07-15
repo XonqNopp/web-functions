@@ -93,8 +93,8 @@ class HtmlHelper extends MyHelper {
             // mandatory meta
             private function mandatoryMeta() {
                 $this->logger->trace("mandatoryMeta()");
-                $back = "<meta charset=\"utf-8\" />\n";
-                $back .= "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n";
+                $back = "<meta charset=\"utf-8\">\n";
+                $back .= "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n";
                 return $back;
             }
         //
@@ -110,7 +110,7 @@ class HtmlHelper extends MyHelper {
                 $back = "";
                 foreach($this->meta as $name => $content) {
                     if($content != "") {
-                        $back .= "<meta name=\"$name\" content=\"$content\" />\n";
+                        $back .= "<meta name=\"$name\" content=\"$content\">\n";
                     }
                 }
                 return $back;
@@ -132,16 +132,16 @@ class HtmlHelper extends MyHelper {
             global $theFileHelper;
             $faviconExt = $theFileHelper->getExt($this->faviconPic, false);
 
-            $back .= "<link rel=\"icon\" type=\"image/$faviconExt\" href=\"{$this->faviconPic}\" />\n";
+            $back .= "<link rel=\"icon\" type=\"image/$faviconExt\" href=\"{$this->faviconPic}\">\n";
 
             $appleIcon = $this->iOsPic != "" ? $this->iOsPic : $this->faviconPic;
-            $back .= "<link rel=\"apple-touch-icon\" href=\"$appleIcon\" />\n";
+            $back .= "<link rel=\"apple-touch-icon\" href=\"$appleIcon\">\n";
 
             $appleStartupIcon = $this->iOsStartup != "" ? $this->iOsStartup : $this->iOsPic;
             if($appleStartupIcon == "") {
                 $appleStartupIcon = $this->faviconPic;
             }
-            $back .= "<link rel=\"apple-touch-startup-image\" href=\"$appleStartupIcon\" />\n";
+            $back .= "<link rel=\"apple-touch-startup-image\" href=\"$appleStartupIcon\">\n";
 
             return $back;
         }

@@ -150,7 +150,7 @@ class FieldEmbedder {
             $this->myTitle = "<label for=\"$name\">{$this->title}</label>&nbsp;:";
             $afterTitle = " ";
             if($this->hasBrAfterTitle) {
-                $afterTitle .= "<br />\n";
+                $afterTitle .= "<br>\n";
             }
             $this->myTitle .= $afterTitle;
         }
@@ -231,7 +231,7 @@ class BaseInput {
                 $back .= $this->attributes->get();
             }
 
-            $back .= " />\n";
+            $back .= ">\n";
 
             return $back;
         }
@@ -394,7 +394,7 @@ class Datalist extends BaseInput {
 
             $options = "";
             foreach($this->value as $value) {
-                $options .= "<option value=\"$value\" />\n";
+                $options .= "<option value=\"$value\">\n";
             }
 
             return "<datalist id=\"{$this->listId}\">$options</datalist>\n";
@@ -577,7 +577,7 @@ class GenericInputChoice extends GenericInputList {
                 $back .= $this->kChecked;
             }
 
-            $back .= "$attributes />";
+            $back .= "$attributes>";
 
             $back .= "<label for=\"{$this->name}_{$key}\">&nbsp;{$val}</label>\n";
         }
@@ -598,7 +598,7 @@ class GenericInputChoice extends GenericInputList {
 
         $this->separator = "&nbsp;\n";
         if($isVerticalList) {
-            $this->separator = "<br />\n";
+            $this->separator = "<br>\n";
         }
 
         return $this->genericGet($name, $list, $value, $title, $attributes, $embedder);
