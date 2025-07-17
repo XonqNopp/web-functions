@@ -75,10 +75,22 @@ class FieldAttributes {
         return " $name";
     }
 
-    public function get() {
+    /**
+     * Get the attributes.
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
+     */
+    public function get($attrSizeAllowed, $name) {
         $back = "";
 
-        $back .= $this->getUintAttr("size", $this->size);
+        $attrSize = $this->getUintAttr("size", $this->size);
+
+        if(!$attrSizeAllowed && $attrSize != "") {
+            global $theLogger;
+            $theLogger->error("Size attribute provided but not allowed for field name=$name");
+        } else {
+            $back .= $attrSize;
+        }
 
         $back .= $this->getValAttr("min", $this->min);
         $back .= $this->getValAttr("max", $this->max);
@@ -193,6 +205,8 @@ class BaseInput {
     protected $attributes;
     protected $embedder;
 
+    protected $attrSizeAllowed = false;
+
         protected function setTitle($title) {
             if($title === NULL) {
                 return;
@@ -228,7 +242,7 @@ class BaseInput {
             $back .= $this->moreAttributes;
 
             if($this->attributes !== NULL) {
-                $back .= $this->attributes->get();
+                $back .= $this->attributes->get($this->attrSizeAllowed, $this->name);
             }
 
             $back .= ">\n";
@@ -323,7 +337,7 @@ class Textarea extends BaseInput {
     protected $type = "textarea";
 
     protected function build() {
-        $back = "<textarea id=\"{$this->name}\" name=\"{$this->name}\"{$this->attributes->get()}{$this->moreAttributes}>";
+        $back = "<textarea id=\"{$this->name}\" name=\"{$this->name}\"{$this->attributes->get($this->attrSizeAllowed, $this->name)}{$this->moreAttributes}>";
 
         if($this->value !== NULL) {
             $back .= "\n{$this->value}";
@@ -437,6 +451,7 @@ class GenericInput extends BaseInput {
 
 class GenericInputBox extends GenericInput {
     protected $datalist;
+    protected $attrSizeAllowed = true;
 
     public function get($name, $value=NULL, $title="", $datalist=NULL, $attributes=NULL, $embedder=NULL) {
         global $theDatalist;
@@ -564,7 +579,7 @@ class GenericInputChoice extends GenericInputList {
     protected function build() {
         $value = $this->getValueArray();
 
-        $attributes = $this->moreAttributes . $this->attributes->get();
+        $attributes = $this->moreAttributes . $this->attributes->get($this->attrSizeAllowed, $this->name);
 
         $inputTypeName = "<input type=\"{$this->type}\" name=\"{$this->inputName}\"";
 
@@ -624,10 +639,10 @@ class SelectInput extends GenericInputList {
     protected $kSelected = " selected=\"selected\"";
 
     protected function build() {
-        $back = "<{$this->type} id=\"{$this->name}\" name=\"{$this->name}\" {$this->attributes->get()}{$this->moreAttributes}>\n";
+        $back = "<{$this->type} id=\"{$this->name}\" name=\"{$this->name}\" {$this->attributes->get($this->attrSizeAllowed, $this->name)}{$this->moreAttributes}>\n";
 
         foreach($this->list as $key => $val) {
-            $back .= "<option value=\"$key\" ";
+            $back .= "<option value=\"$key\"";
 
             if($key == $this->value) {
                 $back .= $this->kSelected;
