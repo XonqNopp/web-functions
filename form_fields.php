@@ -139,6 +139,7 @@ class FieldEmbedder {
     public $hasDiv = true;
     public $hasParagraph = false;
     public $hasBrAfterTitle = false;
+    public $hasLabel = true;
 
     public $title = "";
     public $posttitle = "";
@@ -150,6 +151,11 @@ class FieldEmbedder {
         $this->posttitle = $posttitle;
     }
 
+    /**
+     * Get the field embedded.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     */
     public function get($name, $string) {
         // CSS
         if($this->css === NULL) {
@@ -159,7 +165,11 @@ class FieldEmbedder {
         // title
         $this->myTitle = "";
         if($this->title !== NULL && $this->title != "") {
-            $this->myTitle = "<label for=\"$name\">{$this->title}</label>&nbsp;:";
+            $this->myTitle = $this->title;
+            if($this->hasLabel) {
+                $this->myTitle = "<label for=\"$name\">{$this->myTitle}</label>&nbsp;:";
+            }
+
             $afterTitle = " ";
             if($this->hasBrAfterTitle) {
                 $afterTitle .= "<br>\n";
