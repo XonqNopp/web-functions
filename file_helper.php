@@ -72,7 +72,7 @@ class FileHelper extends MyHelper {
 
             if($ext == ".pdf") {
                 $this->logger->trace("embedFile is PDF");
-                return "<embed src=\"$filename\" type=\"application/pdf\" width=\"$pdfwidth\" height=\"$pdfheight\" />\n";
+                return "<embed src=\"$filename\" type=\"application/pdf\" width=\"$pdfwidth\" height=\"$pdfheight\">\n";
             }
 
             $this->logger->trace("embedFile is *not* PDF");

@@ -20,7 +20,7 @@ To simplify the require statements, all sub-helper files are suffixed with `_hel
   <!doctype html>
   <html lang="en">
   <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
   <title>Page title</title>
   </head>
   <body>
@@ -32,15 +32,15 @@ To simplify the require statements, all sub-helper files are suffixed with `_hel
 * viewport: To have the design not zoomed out on mobile device, you must include the following in the head:
 
   ```html
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   ```
 
 * favicon: You can set some pictures that will be used in the favorites or in iOS home screen.
   To set them independently of the filename, you need to add these lines in the head:
 
   ```html
-  <link rel="icon" type="image/png" href="/pictures/favicon.png" />
-  <link rel="apple-touch-icon" href="/pictures/favicon.png" />
+  <link rel="icon" type="image/png" href="/pictures/favicon.png">
+  <link rel="apple-touch-icon" href="/pictures/favicon.png">
   ```
 
   One must keep in mind that the apple touch icon should not have an alpha channel (transparency) or it will be displayed black.

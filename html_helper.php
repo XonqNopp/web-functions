@@ -59,17 +59,17 @@ class HtmlHelper extends MyHelper {
         }
     //
         // HTML tag
-        private function htmltag() {
+        private function htmltag($language="en") {
             $back = "<html";
-            $back .= ' lang="en"';
+            $back .= ' lang="' . $language . '"';
             $back .= ">\n";
-            $this->logger->trace("htmltag()");
+            $this->logger->trace("htmltag($language)");
             return $back;
         }
     //
         // Init HTML: open doctype and html
-        private function init() {
-            $this->logger->trace("init()");
+        private function init($language="en") {
+            $this->logger->trace("init($language)");
 
             if($this->isOpened) {
                 $this->logger->info("init(): already opened HTML");
@@ -78,7 +78,7 @@ class HtmlHelper extends MyHelper {
 
             $foetus = "";
             $foetus .= $this->doctypetag();
-            $foetus .= $this->htmltag();
+            $foetus .= $this->htmltag($language);
             $foetus .= "<!-- Hey, why do you check the source code? ;-) -->\n";
             echo $foetus;
 
@@ -93,8 +93,8 @@ class HtmlHelper extends MyHelper {
             // mandatory meta
             private function mandatoryMeta() {
                 $this->logger->trace("mandatoryMeta()");
-                $back = "<meta charset=\"utf-8\" />\n";
-                $back .= "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n";
+                $back = "<meta charset=\"utf-8\">\n";
+                $back .= "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n";
                 return $back;
             }
         //
@@ -110,7 +110,7 @@ class HtmlHelper extends MyHelper {
                 $back = "";
                 foreach($this->meta as $name => $content) {
                     if($content != "") {
-                        $back .= "<meta name=\"$name\" content=\"$content\" />\n";
+                        $back .= "<meta name=\"$name\" content=\"$content\">\n";
                     }
                 }
                 return $back;
@@ -132,16 +132,16 @@ class HtmlHelper extends MyHelper {
             global $theFileHelper;
             $faviconExt = $theFileHelper->getExt($this->faviconPic, false);
 
-            $back .= "<link rel=\"icon\" type=\"image/$faviconExt\" href=\"{$this->faviconPic}\" />\n";
+            $back .= "<link rel=\"icon\" type=\"image/$faviconExt\" href=\"{$this->faviconPic}\">\n";
 
             $appleIcon = $this->iOsPic != "" ? $this->iOsPic : $this->faviconPic;
-            $back .= "<link rel=\"apple-touch-icon\" href=\"$appleIcon\" />\n";
+            $back .= "<link rel=\"apple-touch-icon\" href=\"$appleIcon\">\n";
 
             $appleStartupIcon = $this->iOsStartup != "" ? $this->iOsStartup : $this->iOsPic;
             if($appleStartupIcon == "") {
                 $appleStartupIcon = $this->faviconPic;
             }
-            $back .= "<link rel=\"apple-touch-startup-image\" href=\"$appleStartupIcon\" />\n";
+            $back .= "<link rel=\"apple-touch-startup-image\" href=\"$appleStartupIcon\">\n";
 
             return $back;
         }
@@ -268,9 +268,9 @@ class HtmlHelper extends MyHelper {
         }
     //
         // init HTML+body
-        public function hotBooty() {
-            $this->logger->trace("hotBooty()");
-            $this->init();
+        public function hotBooty($language="en") {
+            $this->logger->trace("hotBooty($language)");
+            $this->init($language);
             $this->makeHead();
             $this->decapite();
         }

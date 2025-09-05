@@ -126,7 +126,7 @@ class CssHelper extends MyHelper {
                     continue;
                 }
 
-                $back .= "<link rel=\"stylesheet\" href=\"$stylesheet\" />\n";
+                $back .= "<link rel=\"stylesheet\" href=\"$stylesheet\">\n";
             }
 
             return $back;

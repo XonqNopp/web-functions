@@ -17,13 +17,13 @@ function search_box($fieldname,$boxname,$the_which,$submit,$default,$css)
     if( $the_which[$fieldname] ) {
         $back .= "checked=\"checked\" ";
     }
-    $back .= "/>\n";
+    $back .= ">\n";
     $back .= "</td>\n";
     $back .= "<td class=\"$css" . "_legend\" onclick=\"checkthebox(event,'$fieldname'); focus_id('f_$fieldname');\">\n";
     $back .= $fieldname;
     $back .= "</td>\n";
     $back .= "<td class=\"$css" . "_field\">\n";
-    $back .= "<input id=\"f_$fieldname\" type=\"text\" size=\"80\" name=\"$fieldname\" onchange=\"checkthebox(event,'$fieldname'); enablesubmit(event,'$submit')\" onkeyup=\"checkthebox(event,'$fieldname'); enablesubmit(event,'$submit')\" onblur=\"uncheck_empty('f_$fieldname','$fieldname')\" value=\"$default\" />\n";
+    $back .= "<input id=\"f_$fieldname\" type=\"text\" size=\"80\" name=\"$fieldname\" onchange=\"checkthebox(event,'$fieldname'); enablesubmit(event,'$submit')\" onkeyup=\"checkthebox(event,'$fieldname'); enablesubmit(event,'$submit')\" onblur=\"uncheck_empty('f_$fieldname','$fieldname')\" value=\"$default\">\n";
     $back .= "</td>\n";
     $back .= "</tr>\n";
     return $back;
@@ -41,7 +41,7 @@ function date_box($start,$boxname,$the_which,$submit,$default_year,$default_type
     if( $the_which["Date"] ) {
         $back .= "checked=\"checked\" ";
     }
-    $back .= "/>\n";
+    $back .= ">\n";
     $back .= "</td>\n";
     $back .= "<td class=\"$css" . "_legend\" onclick=\"checkthebox(event,'Date'); focus_id('f_Date');\">\n";
     $back .= "Date";
@@ -96,9 +96,9 @@ function search_buttons($butname,$butval,$resetval,$cancelval,$disbut,$fields_ar
     $back .= "<td></td>\n";
     $back .= "<td class=\"$css" . "_buts\" colspan=\"2\">\n";
     $fields_str = implode("','",$fields_array);
-    $back .= "<input type=\"submit\" name=\"$butname\" value=\"$butval\"$disbut onfocus=\"disable_nobox('$butname',['$fields_str'])\" onmouseover=\"disable_nobox('$butname',['$fields_str'])\" />\n";
-    $back .= "<input type=\"reset\" value=\"$resetval\" onclick=\"disablesubmit('$butname')\" />\n";
-    $back .= "<input type=\"submit\" name=\"no\" value=\"$cancelval\" />\n";
+    $back .= "<input type=\"submit\" name=\"$butname\" value=\"$butval\"$disbut onfocus=\"disable_nobox('$butname',['$fields_str'])\" onmouseover=\"disable_nobox('$butname',['$fields_str'])\">\n";
+    $back .= "<input type=\"reset\" value=\"$resetval\" onclick=\"disablesubmit('$butname')\">\n";
+    $back .= "<input type=\"submit\" name=\"no\" value=\"$cancelval\">\n";
     $back .= "</td>\n";
     $back .= "</tr>\n";
     return $back;

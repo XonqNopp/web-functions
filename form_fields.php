@@ -75,10 +75,22 @@ class FieldAttributes {
         return " $name";
     }
 
-    public function get() {
+    /**
+     * Get the attributes.
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
+     */
+    public function get($attrSizeAllowed, $name) {
         $back = "";
 
-        $back .= $this->getUintAttr("size", $this->size);
+        $attrSize = $this->getUintAttr("size", $this->size);
+
+        if(!$attrSizeAllowed && $attrSize != "") {
+            global $theLogger;
+            $theLogger->error("Size attribute provided but not allowed for field name=$name");
+        } else {
+            $back .= $attrSize;
+        }
 
         $back .= $this->getValAttr("min", $this->min);
         $back .= $this->getValAttr("max", $this->max);
@@ -127,6 +139,7 @@ class FieldEmbedder {
     public $hasDiv = true;
     public $hasParagraph = false;
     public $hasBrAfterTitle = false;
+    public $hasLabel = true;
 
     public $title = "";
     public $posttitle = "";
@@ -138,6 +151,11 @@ class FieldEmbedder {
         $this->posttitle = $posttitle;
     }
 
+    /**
+     * Get the field embedded.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     */
     public function get($name, $string) {
         // CSS
         if($this->css === NULL) {
@@ -147,10 +165,14 @@ class FieldEmbedder {
         // title
         $this->myTitle = "";
         if($this->title !== NULL && $this->title != "") {
-            $this->myTitle = "<label for=\"$name\">{$this->title}</label>&nbsp;:";
+            $this->myTitle = $this->title;
+            if($this->hasLabel) {
+                $this->myTitle = "<label for=\"$name\">{$this->myTitle}</label>&nbsp;:";
+            }
+
             $afterTitle = " ";
             if($this->hasBrAfterTitle) {
-                $afterTitle .= "<br />\n";
+                $afterTitle .= "<br>\n";
             }
             $this->myTitle .= $afterTitle;
         }
@@ -193,6 +215,8 @@ class BaseInput {
     protected $attributes;
     protected $embedder;
 
+    protected $attrSizeAllowed = false;
+
         protected function setTitle($title) {
             if($title === NULL) {
                 return;
@@ -228,10 +252,10 @@ class BaseInput {
             $back .= $this->moreAttributes;
 
             if($this->attributes !== NULL) {
-                $back .= $this->attributes->get();
+                $back .= $this->attributes->get($this->attrSizeAllowed, $this->name);
             }
 
-            $back .= " />\n";
+            $back .= ">\n";
 
             return $back;
         }
@@ -323,7 +347,7 @@ class Textarea extends BaseInput {
     protected $type = "textarea";
 
     protected function build() {
-        $back = "<textarea id=\"{$this->name}\" name=\"{$this->name}\"{$this->attributes->get()}{$this->moreAttributes}>";
+        $back = "<textarea id=\"{$this->name}\" name=\"{$this->name}\"{$this->attributes->get($this->attrSizeAllowed, $this->name)}{$this->moreAttributes}>";
 
         if($this->value !== NULL) {
             $back .= "\n{$this->value}";
@@ -394,7 +418,7 @@ class Datalist extends BaseInput {
 
             $options = "";
             foreach($this->value as $value) {
-                $options .= "<option value=\"$value\" />\n";
+                $options .= "<option value=\"$value\">\n";
             }
 
             return "<datalist id=\"{$this->listId}\">$options</datalist>\n";
@@ -437,6 +461,7 @@ class GenericInput extends BaseInput {
 
 class GenericInputBox extends GenericInput {
     protected $datalist;
+    protected $attrSizeAllowed = true;
 
     public function get($name, $value=NULL, $title="", $datalist=NULL, $attributes=NULL, $embedder=NULL) {
         global $theDatalist;
@@ -564,7 +589,7 @@ class GenericInputChoice extends GenericInputList {
     protected function build() {
         $value = $this->getValueArray();
 
-        $attributes = $this->moreAttributes . $this->attributes->get();
+        $attributes = $this->moreAttributes . $this->attributes->get($this->attrSizeAllowed, $this->name);
 
         $inputTypeName = "<input type=\"{$this->type}\" name=\"{$this->inputName}\"";
 
@@ -577,7 +602,7 @@ class GenericInputChoice extends GenericInputList {
                 $back .= $this->kChecked;
             }
 
-            $back .= "$attributes />";
+            $back .= "$attributes>";
 
             $back .= "<label for=\"{$this->name}_{$key}\">&nbsp;{$val}</label>\n";
         }
@@ -598,7 +623,7 @@ class GenericInputChoice extends GenericInputList {
 
         $this->separator = "&nbsp;\n";
         if($isVerticalList) {
-            $this->separator = "<br />\n";
+            $this->separator = "<br>\n";
         }
 
         return $this->genericGet($name, $list, $value, $title, $attributes, $embedder);
@@ -624,10 +649,10 @@ class SelectInput extends GenericInputList {
     protected $kSelected = " selected=\"selected\"";
 
     protected function build() {
-        $back = "<{$this->type} id=\"{$this->name}\" name=\"{$this->name}\" {$this->attributes->get()}{$this->moreAttributes}>\n";
+        $back = "<{$this->type} id=\"{$this->name}\" name=\"{$this->name}\" {$this->attributes->get($this->attrSizeAllowed, $this->name)}{$this->moreAttributes}>\n";
 
         foreach($this->list as $key => $val) {
-            $back .= "<option value=\"$key\" ";
+            $back .= "<option value=\"$key\"";
 
             if($key == $this->value) {
                 $back .= $this->kSelected;

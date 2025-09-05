@@ -92,7 +92,7 @@ class FormHelper extends MyHelper {
                 $back .= "<input type=\"submit\" name=\"submit\" value=\"$update\"";
                 $back .= " onclick=\"SubmitForm()\"";
                 $back .= " disabled=\"disabled\"";
-                $back .= " />\n";
+                $back .= ">\n";
 
                 if($allowErase) {
                     // erase
@@ -110,7 +110,7 @@ class FormHelper extends MyHelper {
                     if(!$theLogopedist->checkSessionLang("english")) {
                         $back .= ", false";
                     }
-                    $back .= ")\" />\n";
+                    $back .= ")\">\n";
                 }
 
             } else {
@@ -120,16 +120,16 @@ class FormHelper extends MyHelper {
                 if($add === NULL) {
                     $add = $this->highFive($theLogopedist->translate("add"));
                 }
-                $back .= "<input type=\"submit\" name=\"submit\" value=\"$add\" onclick=\"SubmitForm()\" />\n";
+                $back .= "<input type=\"submit\" name=\"submit\" value=\"$add\" onclick=\"SubmitForm()\">\n";
             }
 
             // reset
             $reset  = $this->highFive($theLogopedist->translate("reset"));
-            $back .= "<input type=\"reset\" value=\"$reset\" onclick=\"ResetForm()\" />\n";
+            $back .= "<input type=\"reset\" value=\"$reset\" onclick=\"ResetForm()\">\n";
 
             // cancel
             $cancel = $this->highFive($theLogopedist->translate("cancel"));
-            $back .= "<input type=\"button\" name=\"cancel\" value=\"$cancel\" onclick=\"window.location='$cancelUrl';\" />\n";
+            $back .= "<input type=\"button\" name=\"cancel\" value=\"$cancel\" onclick=\"window.location='$cancelUrl';\">\n";
 
             global $theBodyBuilder;
             $back .= "<noscript>" . $theBodyBuilder->anchor($cancelUrl, "$cancel $wojs", true) . "</noscript>\n";

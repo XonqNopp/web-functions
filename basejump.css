@@ -26,6 +26,11 @@ input[type=number],
 }
 
 
+.tt {
+    font-family: monospace;
+}
+
+
 .framed {
     border: solid 2px;
     padding: 0.5em;
@@ -196,7 +201,7 @@ div.InB {
 
 
 .code, pre {
-    font-family: Courier, serif;
+    font-family: Courier, monospace;
     font-size: 9pt;
     line-height: 80%;
     text-indent: 0mm;
