@@ -6,6 +6,8 @@ require_once("language_helper.php");
 require_once("login_helper.php");
 require_once("server_helper.php");
 
+use mysqli;
+
 
 // To handle DB fields from user input, we have to take care of 3 different types:
 // * user input
@@ -102,7 +104,7 @@ class DatabaseText {
     //
         // inputTextarea2sql: from textarea to SQL
         public function inputTextarea2sql($text) {
-            return trim(nl2br(preg_replace("/(\r?\n)*$/", "", $this->input2sql($text))));
+            return trim(nl2br(preg_replace("/(\r?\n)*$/", "", $this->input2sql($text)), false));
         }
     //
         // sql2htmlTextarea: from SQL to textarea
@@ -122,7 +124,7 @@ class DatabaseText {
             $back = preg_replace("/\r/", "", $back);  // no CR
 
             $back = preg_replace("/\n\n+/", "</p><p$tag>", $back);
-            $back = nl2br($back);
+            $back = nl2br($back, false);
             $back = preg_replace("/<\/p><p/", "</p>\n<p", $back);
             $back = "<p$tag>$back</p>";
 
