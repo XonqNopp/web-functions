@@ -6,7 +6,7 @@ require_once("language_helper.php");
 require_once("login_helper.php");
 require_once("server_helper.php");
 
-use mysqli;
+// use mysqli;  // The use statement with non-compound name 'mysqli' has no effect
 
 
 // To handle DB fields from user input, we have to take care of 3 different types:
@@ -407,6 +407,7 @@ class DatabaseHelper extends MyHelper {
          * Connection
          *
          * @SuppressWarnings(PHPMD.ExitExpression)
+         * @SuppressWarnings(PHPMD.MissingImport)
          */
         private function connection() {
             $this->logger->trace("connection()");
