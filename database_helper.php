@@ -419,7 +419,7 @@ class DatabaseHelper extends MyHelper {
 
             global $theServerHelper;
             if($theServerHelper->isLocalhost()) {
-                $server = "127.0.0.1";
+                $server = "localhost";
                 $username = "localadmin";
                 $password = "localpassword";
             }
