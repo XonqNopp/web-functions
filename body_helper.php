@@ -314,7 +314,10 @@ class BodyHelper extends MyHelper {
          *
          * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
          */
-        public function liAnchor($url, $content, $targetBlank=false, $liClass=NULL, $anchorClass=NULL, $anchorArgs=NULL) {
+        public function liAnchor($url, $content=NULL, $targetBlank=false, $liClass=NULL, $anchorClass=NULL, $anchorArgs=NULL) {
+            if($content === NULL) {
+                $content = $url;
+            }
             return $this->lili(
                 $this->anchor(
                     $url,
