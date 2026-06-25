@@ -126,6 +126,12 @@ th {
 }
 
 
+dt {
+    font-weight: 700;
+    margin-top: 0.75em;
+}
+
+
 .csstab64_table {
     width: 100%;
 }

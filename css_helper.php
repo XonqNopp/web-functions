@@ -8,6 +8,8 @@ class CssHelper extends MyHelper {
     public $isValid = true;
     private $filename;
 
+    private $raw = "";
+
     // special arrays: key is script filename, value is path (if any)
     private $files = array(
         "basejump"      => "functions", //     common CSS for all my websites
@@ -103,6 +105,11 @@ class CssHelper extends MyHelper {
             $this->dirUp("bridge", $dirUp);
         }
     //
+        // Add raw CSS to the page
+        public function addRaw($code) {
+            $this->raw .= $code;
+        }
+    //
         public function lines() {
             $this->logger->trace("lines()");
 
@@ -127,6 +134,10 @@ class CssHelper extends MyHelper {
                 }
 
                 $back .= "<link rel=\"stylesheet\" href=\"$stylesheet\">\n";
+            }
+
+            if($this->raw != "") {
+                $back .= "<style>\n{$this->raw}\n</style>\n";
             }
 
             return $back;

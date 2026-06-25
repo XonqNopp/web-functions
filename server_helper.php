@@ -20,9 +20,13 @@ class ServerHelper extends MyHelper {
         }
 
         // check if localhost
-        $local = preg_match("/localhost$/", $_SERVER["SERVER_NAME"]);  // match end so we can have multiple localhost
-        $lan   = preg_match("/^192\.168\./", $_SERVER["SERVER_NAME"]);
-        $this->isLocalhost = ($local || $lan);
+        $localAddr = "127.0.0.1";
+        $serverNameLocalhost = preg_match("/localhost$/", $_SERVER["SERVER_NAME"]);  // match end so we can have multiple localhost
+        $serverNameLocal = preg_match("/\.local$/", $_SERVER["SERVER_NAME"]);  // match end so we can have multiple localhost
+        $serverNameLan   = preg_match("/^192\.168\./", $_SERVER["SERVER_NAME"]);
+        $serverAddr = $_SERVER["SERVER_ADDR"] == $localAddr;
+        $remoteAddr = $_SERVER["REMOTE_ADDR"] == $localAddr;
+        $this->isLocalhost = ($serverNameLocalhost || $serverNameLocal || $serverNameLan || $serverAddr || $remoteAddr);
         $this->logger->trace("isLocalhost = {$this->isLocalhost()}");
 
         if($this->isLocalhost()) {

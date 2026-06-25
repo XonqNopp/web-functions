@@ -419,7 +419,7 @@ class DatabaseHelper extends MyHelper {
 
             global $theServerHelper;
             if($theServerHelper->isLocalhost()) {
-                $server = "127.0.0.1";
+                $server = "localhost";
                 $username = "localadmin";
                 $password = "localpassword";
             }
@@ -440,14 +440,13 @@ class DatabaseHelper extends MyHelper {
          *
          * @SuppressWarnings(PHPMD.ExitExpression)
          */
-        public function init($database="") {
-            $this->logger->trace("init($database)");
-
+        public function init() {
             if($this->mysqli !== NULL) {
-                $this->logger->debug("init: DB already defined");
+                // Already initialized
                 return;
             }
 
+            $this->logger->trace("init()");
             $mysqli = $this->connection();
             if(!$mysqli) {
                 $this->logger->fatal("init: Problem with database");
@@ -499,8 +498,9 @@ class DatabaseHelper extends MyHelper {
     //
         // query prepare
         public function queryPrepare($query) {
-            $this->logger->trace("queryPrepare(...)");
+            $this->init();
 
+            $this->logger->trace("queryPrepare(...)");
             $back = $this->mysqli->prepare($query);
 
             if($back) {
@@ -514,6 +514,8 @@ class DatabaseHelper extends MyHelper {
     //
         // query manage
         public function queryManage($query) {
+            $this->init();
+
             $this->logger->trace("queryManage(...)");
             $back = $this->mysqli->query($query);
 
